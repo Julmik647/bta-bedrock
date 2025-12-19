@@ -2,12 +2,12 @@
     "format_version": 2,
     "header": {
         "description": "Betafied Resource Pack - Beta 1.7.3 Textures",
-        "name": "Betafied 3.0.2 (Resources)",
+        "name": "Betafied 3.0.3 (Resources)",
         "uuid": "e24e7a57-2a36-4e95-a3b6-2e445125b4ab",
         "version": [
             3,
             0,
-            2
+            3
         ],
         "min_engine_version": [
             1,
@@ -23,7 +23,7 @@
             "version": [
                 3,
                 0,
-                2
+                3
             ]
         }
     ]
