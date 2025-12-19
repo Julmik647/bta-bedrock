@@ -22,6 +22,8 @@ import 'paritySystems/flatSnow.js';
 import 'paritySystems/sword.js';
 import 'paritySystems/betaStacking.js';
 import 'paritySystems/portalRemoval.js';
+import 'paritySystems/randomSpawn.js';
+import 'paritySystems/swordMining.js';
  
 // Modules (World Generation & Conversions)
 import './modules/chunk_scrubber.js';
