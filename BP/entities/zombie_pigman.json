@@ -8,17 +8,6 @@
       "is_experimental": false
     },
     "component_groups": {
-      "minecraft:pig_zombie_baby": {
-        "minecraft:experience_reward": {
-          "on_death": "query.last_hit_by_player ? 12 + (query.equipment_count * Math.Random(1,3)) : 0"
-        },
-        "minecraft:is_baby": {
-        },
-        "minecraft:scale": {
-          "value": 0.5
-        }
-      },
-
       "minecraft:pig_zombie_adult": {
         "minecraft:rideable": {
           "seat_count": 0,
@@ -145,62 +134,20 @@
 
     "events": {
       "minecraft:entity_transformed": {
-        "sequence": [
-          {
-            "filters": {
-              "test": "has_component",
-              "subject": "other",
-              "value": "minecraft:is_baby"
-            },
-            "add": {
-              "component_groups": [
-                "minecraft:pig_zombie_baby",
-                "minecraft:pig_zombie_calm"
-              ]
-            }
-          },
-          {
-            "filters": {
-              "test": "has_component",
-              "subject": "other",
-              "operator": "!=",
-              "value": "minecraft:is_baby"
-            },
-            "add": {
-              "component_groups": [
-                "minecraft:pig_zombie_adult",
-                "minecraft:pig_zombie_calm"
-              ]
-            }
-          }
-        ]
+        "add": {
+          "component_groups": [
+            "minecraft:pig_zombie_adult",
+            "minecraft:pig_zombie_calm"
+          ]
+        }
       },
       "minecraft:entity_spawned": {
-        "randomize": [
-          {
-            "weight": 95,
-            "remove": {
-            },
-            "add": {
-              "component_groups": [
-                "minecraft:pig_zombie_adult",
-                "minecraft:pig_zombie_calm"
-              ]
-            }
-          },
-          {
-            "weight": 5,
-            "remove": {
-            },
-            "add": {
-              "component_groups": [
-                "minecraft:pig_zombie_baby",
-                "minecraft:pig_zombie_calm"
-              ]
-
-            }
-          }
-        ]
+        "add": {
+          "component_groups": [
+            "minecraft:pig_zombie_adult",
+            "minecraft:pig_zombie_calm"
+          ]
+        }
       },
       "minecraft:on_calm": {
         "remove": {

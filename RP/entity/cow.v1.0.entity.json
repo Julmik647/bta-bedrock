@@ -32,11 +32,7 @@
             },
             "render_controllers": [
                 "controller.render.cow"
-            ],
-            "spawn_egg": {
-                "texture": "spawn_egg",
-                "texture_index": 1
-            }
+            ]
         }
     }
 }

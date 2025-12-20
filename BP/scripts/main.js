@@ -24,11 +24,13 @@ import 'paritySystems/betaStacking.js';
 import 'paritySystems/portalRemoval.js';
 import 'paritySystems/randomSpawn.js';
 import 'paritySystems/swordMining.js';
+import 'paritySystems/betaAnimalAI.js';
  
 // Modules (World Generation & Conversions)
-import './modules/chunk_scrubber.js';
+// disabled - using pre-baked mctemplate now
+// import './modules/chunk_scrubber.js';
 import './modules/entity_cleaner.js';
-import './modules/rough_bedrock.js';
+// import './modules/rough_bedrock.js';
 import './modules/inventory_converter.js';
 
 // Legacy / Optional Imports (Check if needed)

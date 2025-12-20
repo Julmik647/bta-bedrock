@@ -681,25 +681,7 @@
             "category": "player",
             "max_distance": null,
             "min_distance": null,
-            "sounds": [
-                {
-                    "name": "sounds/mob/player/attack/weak1",
-                    "volume": 0.20
-                },
-                {
-                    "load_on_low_memory": true,
-                    "name": "sounds/mob/player/attack/weak2",
-                    "volume": 0.20
-                },
-                {
-                    "name": "sounds/mob/player/attack/weak3",
-                    "volume": 0.20
-                },
-                {
-                    "name": "sounds/mob/player/attack/weak4",
-                    "volume": 0.20
-                }
-            ]
+            "sounds": []
         },
         "game.player.attack.strong": {
             "__use_legacy_max_distance": "true",

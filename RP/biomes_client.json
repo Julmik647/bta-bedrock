@@ -2,7 +2,7 @@
     "biomes": {
         "default": {
             "fog_identifier": "classic_water:default_fog",
-            "water_surface_transparency": 0.60,
+            "water_surface_transparency": 0.75,
             "water_surface_color": "#FFFFFF"
         },
         "bamboo_jungle": {

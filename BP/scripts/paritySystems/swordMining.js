@@ -2,28 +2,39 @@ import { world, system } from "@minecraft/server";
 
 console.warn("[Betafied] Sword Mining System Loaded");
 
+// blocks that swords break faster in beta 1.7.3
 const SWORD_FAST_BLOCKS = new Set([
-    // instant break
+    // cobweb - instant with sword
     "minecraft:cobweb",
     "minecraft:web",
     
-    // faster break 
+    // leaves
     "minecraft:leaves",
     "minecraft:leaves2",
+    "minecraft:azalea_leaves",
+    "minecraft:azalea_leaves_flowered",
     
-    // wooden 
+    // wooden stairs - swords were faster than axes in beta
     "minecraft:oak_stairs",
-    "minecraft:oak_planks",
+    "minecraft:wooden_stairs",
     
-    // faster break 
+    // planks
+    "minecraft:oak_planks",
+    "minecraft:planks",
+    
+    // pumpkin
     "minecraft:pumpkin",
     "minecraft:lit_pumpkin",
+    "minecraft:carved_pumpkin",
+    
+    // melon
+    "minecraft:melon_block",
     
     // wool
     "minecraft:wool"
 ]);
 
-// swords 
+// swords
 const SWORDS = new Set([
     "minecraft:wooden_sword",
     "minecraft:stone_sword", 
@@ -32,42 +43,50 @@ const SWORDS = new Set([
     "minecraft:diamond_sword"
 ]);
 
-// apply haste
-world.beforeEvents.playerBreakBlock.subscribe((event) => {
-    const player = event.player;
-    const block = event.block;
-    
-    if (!SWORD_FAST_BLOCKS.has(block.typeId)) return;
-    
-    const equip = player.getComponent("equippable");
-    if (!equip) return;
-    
-    const mainhand = equip.getEquipment("Mainhand");
-    if (!mainhand || !SWORDS.has(mainhand.typeId)) return;
-    
-    system.run(() => {
-        try {
-            player.addEffect("haste", 5, { amplifier: 2, showParticles: false });
-        } catch (e) {}
-    });
-});
+// track who had haste last tick
+const lastHaste = new Map();
 
-// keep haste while looking at sword-fast blocks with sword equipped
+// only apply haste when actively looking at correct block with sword
 system.runInterval(() => {
     for (const player of world.getPlayers()) {
+        const playerId = player.id;
+        
         const equip = player.getComponent("equippable");
-        if (!equip) continue;
+        if (!equip) {
+            // remove haste if had it
+            if (lastHaste.has(playerId)) {
+                try { player.removeEffect("haste"); } catch (e) {}
+                lastHaste.delete(playerId);
+            }
+            continue;
+        }
         
         const mainhand = equip.getEquipment("Mainhand");
-        if (!mainhand || !SWORDS.has(mainhand.typeId)) continue;
+        const hasSword = mainhand && SWORDS.has(mainhand.typeId);
+        
+        if (!hasSword) {
+            if (lastHaste.has(playerId)) {
+                try { player.removeEffect("haste"); } catch (e) {}
+                lastHaste.delete(playerId);
+            }
+            continue;
+        }
         
         const blockRay = player.getBlockFromViewDirection({ maxDistance: 5 });
-        if (!blockRay?.block) continue;
+        const lookingAtFast = blockRay?.block && SWORD_FAST_BLOCKS.has(blockRay.block.typeId);
         
-        if (SWORD_FAST_BLOCKS.has(blockRay.block.typeId)) {
+        if (lookingAtFast) {
+            // apply minimal haste 
             try {
-                player.addEffect("haste", 10, { amplifier: 2, showParticles: false });
+                player.addEffect("haste", 3, { amplifier: 1, showParticles: false });
             } catch (e) {}
+            lastHaste.set(playerId, true);
+        } else {
+            // 
+            if (lastHaste.has(playerId)) {
+                try { player.removeEffect("haste"); } catch (e) {}
+                lastHaste.delete(playerId);
+            }
         }
     }
-}, 5);
+}, 2); // check every 2 ticks for responsiveness

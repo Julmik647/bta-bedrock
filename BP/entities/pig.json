@@ -60,17 +60,6 @@
         "minecraft:loot": {
           "table": "loot_tables/entities/pig_saddled.json"
         },
-        "minecraft:boostable": {
-          "speed_multiplier": 1.35,
-          "duration": 3.0,
-          "boost_items": [
-            {
-              "item": "carrotOnAStick",
-              "damage": 2,
-              "replace_item": "fishing_rod"
-            }
-          ]
-        },
         "minecraft:rideable": {
           "seat_count": 1,
           "interact_text": "action.interact.ride.horse",
@@ -84,12 +73,6 @@
               0.0
             ]
           }
-        },
-        "minecraft:item_controllable": {
-          "control_items": "carrotOnAStick"
-        },
-        "minecraft:behavior.controlled_by_player": {
-          "priority": 0
         }
       }
     },
@@ -145,13 +128,16 @@
         ]
       },
       "minecraft:movement": {
-        "value": 0.25
+        "value": 0.2
       },
       "minecraft:navigation.walk": {
         "can_path_over_water": false,
-        "avoid_water": true,
-        "avoid_damage_blocks": true,
-        "is_amphibious": false
+        "avoid_water": false,
+        "avoid_damage_blocks": false,
+        "is_amphibious": false,
+        "can_pass_doors": false,
+        "can_open_doors": false,
+        "can_break_doors": false
       },
       "minecraft:movement.basic": {},
       "minecraft:jump.static": {},
@@ -179,15 +165,13 @@
         "priority": 5,
         "speed_multiplier": 1.2,
         "items": [
-          "potato",
-          "carrot",
-          "beetroot",
-          "carrotOnAStick"
+          "wheat"
         ]
       },
       "minecraft:behavior.random_stroll": {
         "priority": 7,
-        "speed_multiplier": 1.0
+        "speed_multiplier": 0.8,
+        "interval": 200
       },
       "minecraft:behavior.look_at_player": {
         "priority": 8,
@@ -205,14 +189,6 @@
       "minecraft:conditional_bandwidth_optimization": {}
     },
     "events": {
-      "become_zombie": {
-        "remove": {},
-        "add": {
-          "component_groups": [
-            "minecraft:pig_transform"
-          ]
-        }
-      },
       "minecraft:entity_spawned": {
         "sequence": [
           {
@@ -224,18 +200,6 @@
             ]
           }
         ]
-      },
-      "minecraft:on_saddled": {
-        "remove": {
-          "component_groups": [
-            "minecraft:pig_unsaddled"
-          ]
-        },
-        "add": {
-          "component_groups": [
-            "minecraft:pig_saddled"
-          ]
-        }
       },
       "minecraft:spawn_adult": {
         "add": {

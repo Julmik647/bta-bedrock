@@ -23,7 +23,7 @@
             }
         ],
         "result": {
-            "item": "minecraft:emptymap",
+            "item": "minecraft:empty_map",
             "data": 0
         }
     }

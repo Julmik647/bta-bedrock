@@ -33,11 +33,7 @@
             },
             "render_controllers": [
                 "controller.render.pig"
-            ],
-            "spawn_egg": {
-                "texture": "spawn_egg",
-                "texture_index": 2
-            }
+            ]
         }
     }
 }

@@ -130,6 +130,7 @@
         
         "planks_jungle": { "textures": "textures/blocks/planks_oak" },
         "planks_acacia": { "textures": "textures/blocks/planks_oak" },
+        "acacia_planks": { "textures": "textures/blocks/planks_oak" },
         "planks_big_oak": { "textures": "textures/blocks/planks_oak" },
         "cherry_planks": { "textures": "textures/blocks/planks_oak" },
         "mangrove_planks": { "textures": "textures/blocks/planks_oak" },

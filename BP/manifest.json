@@ -7,7 +7,7 @@
         ]
     },
     "header": {
-        "name": "Betafied 3.0.3",
+        "name": "Betafied 3.0.4",
         "description": "Betafied recreates Minecraft Beta 1.7.3 in Bedrock Edition.",
         "min_engine_version": [
             1,
@@ -18,7 +18,7 @@
         "version": [
             3,
             0,
-            3
+            4
         ]
     },
     "modules": [
@@ -28,7 +28,7 @@
             "version": [
                 3,
                 0,
-                3
+                4
             ]
         },
         {
@@ -39,7 +39,7 @@
             "version": [
                 3,
                 0,
-                3
+                4
             ]
         }
     ],
@@ -50,7 +50,7 @@
         },
         {
             "uuid": "e24e7a57-2a36-4e95-a3b6-2e445125b4ab",
-            "version": [3, 0, 3]
+            "version": [3, 0, 4]
         }
     ]
 }

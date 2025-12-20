@@ -3,22 +3,22 @@
     "texture_name": "atlas.items",
     "texture_data": {
         "bow": {
-            "textures": "textures/items/bow"
+            "textures": "textures/items/bow_standby"
         },
         "apple": {
             "textures": "textures/items/apple"
         },
         "golden_apple": {
-            "textures": "textures/items/golden_apple"
+            "textures": "textures/items/apple_golden"
         },
         "bread": {
             "textures": "textures/items/bread"
         },
         "cooked_porkchop": {
-            "textures": "textures/items/cooked_porkchop"
+            "textures": "textures/items/porkchop_cooked"
         },
         "porkchop": {
-            "textures": "textures/items/porkchop"
+            "textures": "textures/items/porkchop_raw"
         },
         "cookie": {
             "textures": "textures/items/cookie"

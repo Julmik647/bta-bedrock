@@ -1,20 +1,17 @@
 {
   "format_version": "1.13.0",
-  "minecraft:scatter_feature": {
+  "minecraft:ore_feature": {
     "description": {
       "identifier": "minecraft:fern_feature"
     },
-    "iterations": 4,
-    "scatter_chance": 20,
-    "x": {
-      "distribution": "uniform",
-      "extent": [0, 15]
-    },
-    "y": "query.heightmap(variable.worldx, variable.worldz)",
-    "z": {
-      "distribution": "uniform", 
-      "extent": [0, 15]
-    },
-    "places_feature": "minecraft:fern"
+    "count": 1,
+    "replace_rules": [
+      {
+        "places_block": "minecraft:air",
+        "may_replace": [
+          "minecraft:structure_void"
+        ]
+      }
+    ]
   }
 }

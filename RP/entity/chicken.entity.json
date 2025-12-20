@@ -34,11 +34,7 @@
             },
             "render_controllers": [
                 "controller.render.chicken"
-            ],
-            "spawn_egg": {
-                "texture": "spawn_egg",
-                "texture_index": 0
-            }
+            ]
         }
     }
 }

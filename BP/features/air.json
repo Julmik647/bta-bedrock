@@ -5,13 +5,12 @@
       "identifier": "minecraft:air"
     },
     "count": 1,
-    "places_block": "minecraft:air",
     "replace_rules": [
       {
         "places_block": "minecraft:air",
         "may_replace": [
           "minecraft:stone",
-          "minecraft:grass",
+          "minecraft:grass_block",
           "minecraft:dirt"
         ]
       }
