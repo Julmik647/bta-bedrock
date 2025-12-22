@@ -37,10 +37,6 @@ const COPPER_CONVERSIONS = new Set([
     "minecraft:waxed_oxidized_copper"
 ]);
 
-const IRON_CONVERSIONS = new Set([
-    // Removed copper items from here
-]);
-
 const WOOD_CONVERSIONS = new Set([
     "minecraft:cherry_log", "minecraft:mangrove_log", "minecraft:bamboo_block",
     "minecraft:crimson_stem", "minecraft:warped_stem", "minecraft:stripped_cherry_log",
@@ -64,6 +60,18 @@ const FLOWER_CONVERSIONS = new Set([
     "minecraft:pink_petals", "minecraft:torchflower", "minecraft:pitcher_plant"
 ]);
 
+// beta food: vanilla -> custom unstackable
+const FOOD_CONVERSIONS = {
+    "minecraft:apple": "bh:apple",
+    "minecraft:bread": "bh:bread",
+    "minecraft:porkchop": "bh:porkchop",
+    "minecraft:cooked_porkchop": "bh:cooked_porkchop",
+    "minecraft:cod": "bh:cod",
+    "minecraft:cooked_cod": "bh:cooked_cod",
+    "minecraft:golden_apple": "bh:golden_apple",
+    "minecraft:cookie": "bh:cookie"
+};
+
 system.runInterval(() => {
     for (const player of world.getAllPlayers()) {
         const inv = player.getComponent("inventory")?.container;
@@ -74,13 +82,22 @@ system.runInterval(() => {
             if (!item) continue;
             const typeId = item.typeId;
 
+            // food conversions (must be first to catch before other checks)
+            if (FOOD_CONVERSIONS[typeId]) {
+                const newId = FOOD_CONVERSIONS[typeId];
+                // spawn individual items for each in stack
+                for (let k = 0; k < item.amount; k++) {
+                    inv.addItem(new ItemStack(newId, 1));
+                }
+                inv.setItem(i, undefined);
+                continue;
+            }
+
             // Copper Logic (Anti-Exploit)
             if (COPPER_CONVERSIONS.has(typeId)) {
                 if (typeId.includes("ore")) {
-                    // Ores -> Stone (Useless)
                     inv.setItem(i, new ItemStack("minecraft:stone", item.amount));
                 } else {
-                    // Ingots/Blocks -> Cobblestone
                     inv.setItem(i, new ItemStack("minecraft:cobblestone", item.amount));
                 }
             }
@@ -95,11 +112,13 @@ system.runInterval(() => {
                      typeId === "minecraft:rabbit_foot") {
                 inv.setItem(i, undefined);
             }
-            // Beta Parity: Salmon -> Fish (Cod)
+            // Beta Parity: Salmon -> Fish (Cod) - now converts to bh:cod
             else if (typeId === "minecraft:salmon" || typeId === "minecraft:cooked_salmon") {
-                // cooked salmon -> cooked cod, raw salmon -> raw cod
-                const newId = typeId.includes("cooked") ? "minecraft:cooked_cod" : "minecraft:cod";
-                inv.setItem(i, new ItemStack(newId, item.amount));
+                const newId = typeId.includes("cooked") ? "bh:cooked_cod" : "bh:cod";
+                for (let k = 0; k < item.amount; k++) {
+                    inv.addItem(new ItemStack(newId, 1));
+                }
+                inv.setItem(i, undefined);
             }
             
             else if (STONE_CONVERSIONS.has(typeId)) {
@@ -121,4 +140,5 @@ system.runInterval(() => {
             }
         }
     }
-}, 20); // 1 second - no rush
+}, 10);
+

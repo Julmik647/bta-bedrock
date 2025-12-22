@@ -1,3 +1,11 @@
 tile.planks.name=Wooden Planks
 tile.planks.oak.name=Wooden Planks
 tile.bh:crafting_table.name=Crafting Table
+item.bh:apple.name=Apple
+item.bh:bread.name=Bread
+item.bh:porkchop.name=Raw Porkchop
+item.bh:cooked_porkchop.name=Cooked Porkchop
+item.bh:cod.name=Raw Fish
+item.bh:cooked_cod.name=Cooked Fish
+item.bh:golden_apple.name=Golden Apple
+item.bh:cookie.name=Cookie

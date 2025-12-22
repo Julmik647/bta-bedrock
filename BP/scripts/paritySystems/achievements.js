@@ -1,9 +1,6 @@
-import { world, system, EntityInventoryComponent, EquipmentSlot } from "@minecraft/server";
+import { world, system } from "@minecraft/server";
 
 console.warn("[Betafied] Achievements System Loaded");
-
-// configuration
-const ALLOW_DEBUG = false;
 
 // definitions
 const ACH = {
@@ -63,6 +60,8 @@ const TITLES = {
     [ACH.ON_A_RAIL]: "On A Rail"
 };
 
+const TOTAL_ACHIEVEMENTS = Object.keys(ACH).length;
+
 // core system
 class AchievementSystem {
     
@@ -71,19 +70,21 @@ class AchievementSystem {
     }
 
     setupEvents() {
-        // chat command
+        // chat commands
         if (world.beforeEvents && world.beforeEvents.chatSend) {
             world.beforeEvents.chatSend.subscribe((ev) => {
-                if (ev.message.trim().toLowerCase() === "!achievements") {
+                const msg = ev.message.trim().toLowerCase();
+                if (msg === "!achievements" || msg === "!ach") {
                     ev.cancel = true;
                     this.openUI(ev.sender);
+                } else if (msg === "!achievements reset") {
+                    ev.cancel = true;
+                    this.resetAchievements(ev.sender);
                 }
             });
-        } else {
-             console.warn("[Betafied] chatSend event not found. !achievements command disabled.");
         }
 
-        // taking inventory: auto-grant on spawn since we can't detect inventory open
+        // taking inventory: auto-grant on spawn
         world.afterEvents.playerSpawn.subscribe((ev) => {
             if (ev.initialSpawn) {
                 this.grant(ev.player, ACH.TAKING_INVENTORY);
@@ -105,13 +106,20 @@ class AchievementSystem {
             }
         }, 20);
 
-        // monster hunter
+        // monster hunter (includes zombie pigman for beta)
         world.afterEvents.entityDie.subscribe((ev) => {
             if (ev.damageSource.damagingEntity?.typeId === "minecraft:player") {
                 const victim = ev.deadEntity;
                 const player = ev.damageSource.damagingEntity;
                 
-                const HOSTILES = ["minecraft:zombie", "minecraft:skeleton", "minecraft:spider", "minecraft:creeper"];
+                const HOSTILES = [
+                    "minecraft:zombie", 
+                    "minecraft:skeleton", 
+                    "minecraft:spider", 
+                    "minecraft:creeper",
+                    "minecraft:zombie_pigman",
+                    "minecraft:zombified_piglin"
+                ];
                 if (HOSTILES.includes(victim.typeId)) {
                     this.grant(player, ACH.MONSTER_HUNTER);
                 }
@@ -138,7 +146,6 @@ class AchievementSystem {
     }
 
     checkRiding(player) {
-        // on a rail: check if riding a minecart
         const rideable = player.getComponent("minecraft:riding");
         if (rideable && rideable.entityRidingOn) {
             const vehicle = rideable.entityRidingOn;
@@ -152,7 +159,6 @@ class AchievementSystem {
         const inv = player.getComponent("inventory")?.container;
         if (!inv) return;
 
-        // auto-grant inv check
         this.grant(player, ACH.TAKING_INVENTORY); 
 
         let hasLog = false;
@@ -175,10 +181,15 @@ class AchievementSystem {
 
             if (id.includes("_log")) hasLog = true;
             if (id === "minecraft:crafting_table" || id === "bh:crafting_table") hasBench = true;
-            if (id.includes("wooden_sword")) hasSword = true;
-            if (id.includes("wooden_hoe")) hasHoe = true;
-            if (id.includes("wooden_pickaxe")) hasWoodPick = true;
-            if (id.includes("stone_pickaxe")) hasStonePick = true;
+            // any sword counts (wooden, stone, iron, gold, diamond)
+            if (id.includes("_sword")) hasSword = true;
+            // any hoe counts
+            if (id.includes("_hoe")) hasHoe = true;
+            // any pickaxe counts for time to mine
+            if (id.includes("_pickaxe")) hasWoodPick = true;
+            // stone+ pickaxe for upgrade
+            if (id.includes("stone_pickaxe") || id.includes("iron_pickaxe") || 
+                id.includes("golden_pickaxe") || id.includes("diamond_pickaxe")) hasStonePick = true;
             if (id === "minecraft:leather") hasLeather = true;
             if (id === "minecraft:bread") hasBread = true;
             if (id === "minecraft:cake") hasCake = true;
@@ -205,6 +216,14 @@ class AchievementSystem {
         return player.getDynamicProperty(`ach:${key}`) === true;
     }
 
+    getUnlockedCount(player) {
+        let count = 0;
+        Object.values(ACH).forEach(key => {
+            if (this.has(player, key)) count++;
+        });
+        return count;
+    }
+
     grant(player, key) {
         if (this.has(player, key)) return;
 
@@ -222,8 +241,16 @@ class AchievementSystem {
         player.playSound("random.levelup");
     }
 
+    resetAchievements(player) {
+        Object.values(ACH).forEach(key => {
+            player.setDynamicProperty(`ach:${key}`, undefined);
+        });
+        player.sendMessage("§cAchievements reset!");
+    }
+
     openUI(player) {
-        player.sendMessage("§e--- Beta Achievements ---");
+        const count = this.getUnlockedCount(player);
+        player.sendMessage(`§e--- Beta Achievements (${count}/${TOTAL_ACHIEVEMENTS}) ---`);
         
         Object.values(ACH).forEach(key => {
             const unlocked = this.has(player, key);
@@ -232,20 +259,17 @@ class AchievementSystem {
             const parentUnlocked = !parent || this.has(player, parent);
             
             if (unlocked) {
-                player.sendMessage(`§a[✔] ${title} §r`);
+                player.sendMessage(`§a[✔] ${title}`);
             } else if (parentUnlocked) {
-                 player.sendMessage(`§f[ ] ${title} §r`);
+                 player.sendMessage(`§f[ ] ${title}`);
             } else {
                  const parentTitle = TITLES[parent];
-                 player.sendMessage(`§7[Locked] ??? (Need: ${parentTitle})`);
+                 player.sendMessage(`§7[?] ??? (Need: ${parentTitle})`);
             }
         });
-    }
-
-    printList(player) {
-        // deporecated
     }
 }
 
 const achSystem = new AchievementSystem();
 export default achSystem;
+
