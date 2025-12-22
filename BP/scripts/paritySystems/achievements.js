@@ -104,7 +104,7 @@ class AchievementSystem {
                 this.checkInventory(player);
                 this.checkRiding(player);
             }
-        }, 20);
+        }, 100);
 
         // monster hunter (includes zombie pigman for beta)
         world.afterEvents.entityDie.subscribe((ev) => {

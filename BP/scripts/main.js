@@ -6,7 +6,6 @@ import 'paritySystems/entitySpawnHandler.js';
 import 'paritySystems/achievements.js';
 import 'paritySystems/foodSystem.js';
 import 'paritySystems/placementSystem.js';
-import 'paritySystems/itemRemoval.js';
 import 'paritySystems/machineGunBow.js';
 import 'paritySystems/help.js';
 import 'paritySystems/playerLoop.js'; // unified: noSprint, noOffhand, bubbleFix
@@ -25,11 +24,10 @@ import 'paritySystems/swordMining.js';
 import 'paritySystems/betaAnimalAI.js';
 import 'paritySystems/netherIce.js';
  
-// disabled cause 
-// import './modules/chunk_scrubber.js';
+// modules
 import './modules/entity_cleaner.js';
-// import './modules/rough_bedrock.js';
-import './modules/inventory_converter.js';
+import './modules/InventoryManager.js'; // unified: item whitelist, conversions, food
 
 // Initialize
 console.warn("[Betafied] Main System Loaded - All Modules Initialized");
+

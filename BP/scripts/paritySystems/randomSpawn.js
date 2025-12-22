@@ -2,10 +2,10 @@ import { world, system } from "@minecraft/server";
 
 // random spawn within pre-generated bounds
 const SPAWN_BOUNDS = {
-    minX: -1500,
-    maxX: 1500,
-    minZ: -1500,
-    maxZ: 1500
+    minX: -1000,
+    maxX: 1000,
+    minZ: -1000,
+    maxZ: 1000
 };
 
 console.warn("[Betafied] Random Spawn Module Loaded");

@@ -2,17 +2,17 @@
 
 import { world, system, ItemStack } from "@minecraft/server";
 
-// food values - beta 1.7.3 only (matches itemRemoval.js allowlist)
+// food values - beta 1.7.3 custom items only
 const FOOD_ITEMS = Object.freeze({
-  "minecraft:apple": { health: 4 },
-  "minecraft:bread": { health: 5 },
-  "minecraft:cookie": { health: 1 },
-  "minecraft:cod": { health: 2 },
-  "minecraft:cooked_cod": { health: 5 },
-  "minecraft:golden_apple": { health: 42 },
-  "minecraft:mushroom_stew": { health: 10, returnContainer: "minecraft:bowl" },
-  "minecraft:porkchop": { health: 3 },
-  "minecraft:cooked_porkchop": { health: 8 }
+  "bh:apple": { health: 4 },
+  "bh:bread": { health: 5 },
+  "bh:cookie": { health: 1 },
+  "bh:cod": { health: 2 },
+  "bh:cooked_cod": { health: 5 },
+  "bh:golden_apple": { health: 42 },
+  "bh:porkchop": { health: 3 },
+  "bh:cooked_porkchop": { health: 8 },
+  "minecraft:mushroom_stew": { health: 10, returnContainer: "minecraft:bowl" }
 });
 
 const CAKE_CONFIG = {
