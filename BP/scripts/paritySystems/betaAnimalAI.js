@@ -11,7 +11,16 @@ const PASSIVE_MOBS = new Set([
 ]);
 
 // track jump cooldowns per entity
+// track hurt cooldowns to prevent floating when spam-hit
+const hurtCooldowns = new Map();
 const jumpCooldowns = new Map();
+
+world.afterEvents.entityHurt.subscribe((ev) => {
+    if (PASSIVE_MOBS.has(ev.hurtEntity.typeId)) {
+        // disable jumping for 8 seconds after being hit
+        hurtCooldowns.set(ev.hurtEntity.id, Date.now() + 8000);
+    }
+});
 
 // random hop behavior - less frequent, more natural
 system.runInterval(() => {
@@ -22,7 +31,13 @@ system.runInterval(() => {
         const entityId = entity.id;
         const now = Date.now();
         
-        // check cooldown
+        // check hurt cooldown (stun)
+        if (hurtCooldowns.has(entityId)) {
+            if (now < hurtCooldowns.get(entityId)) continue;
+            hurtCooldowns.delete(entityId);
+        }
+
+        // check jump cooldown
         const cooldownEnd = jumpCooldowns.get(entityId) || 0;
         if (now < cooldownEnd) continue;
         
@@ -48,9 +63,6 @@ system.runInterval(() => {
             const horizontalSpeed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
             if (horizontalSpeed < 0.01) continue;
             
-            // skip if recently hurt (has hurt time)
-            const health = entity.getComponent("health");
-            if (health && entity.lastHurtTime !== undefined && entity.lastHurtTime < 120) continue;
         } catch (e) { continue; }
         
         // chickens 1 jump, others 1-3
@@ -66,6 +78,10 @@ system.runInterval(() => {
             system.runTimeout(() => {
                 try {
                     if (!entity.isValid()) return;
+                    
+                    // re-check hurt stun before executing delayed jumps
+                    if (hurtCooldowns.has(entity.id) && Date.now() < hurtCooldowns.get(entity.id)) return;
+
                     // only jump if on ground
                     const v = entity.getVelocity();
                     if (Math.abs(v.y) < 0.1) {
@@ -84,12 +100,19 @@ system.runInterval(() => {
 // cleanup dead entities
 system.runInterval(() => {
     const allIds = new Set();
-    for (const entity of world.getDimension("overworld").getEntities()) {
-        allIds.add(entity.id);
-    }
-    for (const id of jumpCooldowns.keys()) {
-        if (!allIds.has(id)) {
-            jumpCooldowns.delete(id);
+    const overworld = world.getDimension("overworld");
+    if (overworld) { // safety check
+        for (const entity of overworld.getEntities()) {
+            allIds.add(entity.id);
         }
+    }
+    
+    // clean jump cooldowns
+    for (const id of jumpCooldowns.keys()) {
+        if (!allIds.has(id)) jumpCooldowns.delete(id);
+    }
+    // clean hurt cooldowns
+    for (const id of hurtCooldowns.keys()) {
+        if (!allIds.has(id)) hurtCooldowns.delete(id);
     }
 }, 600);

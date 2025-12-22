@@ -2,7 +2,7 @@
 
 import { world, system, ItemStack } from "@minecraft/server";
 
-// food values - beta 1.7.3 only
+// food values - beta 1.7.3 only (matches itemRemoval.js allowlist)
 const FOOD_ITEMS = Object.freeze({
   "minecraft:apple": { health: 4 },
   "minecraft:bread": { health: 5 },

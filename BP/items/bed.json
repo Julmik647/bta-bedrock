@@ -1,0 +1,19 @@
+{
+  "format_version": "1.20.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "minecraft:bed",
+      "menu_category": {
+        "category": "items",
+        "group": "itemGroup.name.bed"
+      }
+    },
+    "components": {
+      "minecraft:icon": "bed_red",
+      "minecraft:max_stack_size": 1,
+      "minecraft:block_placer": {
+        "block": "minecraft:bed"
+      }
+    }
+  }
+}

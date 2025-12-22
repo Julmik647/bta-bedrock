@@ -253,6 +253,81 @@
         },
         "quartz": {
             "textures": "textures/items/cookie"
+        },
+        "door_wood": {
+            "textures": "textures/items/door_wood"
+        },
+        "door_iron": {
+            "textures": "textures/items/door_iron"
+        },
+        "mushroom_stew": {
+            "textures": "textures/items/mushroom_stew"
+        },
+        "rabbit_raw": {
+            "textures": "textures/items/rabbit_raw"
+        },
+        "rabbit_cooked": {
+            "textures": "textures/items/rabbit_cooked"
+        },
+        "fish_salmon_raw": {
+            "textures": "textures/items/fish_salmon_raw"
+        },
+        "fish_salmon_cooked": {
+            "textures": "textures/items/fish_salmon_cooked"
+        },
+        "bed_red": {
+            "textures": "textures/items/bed_red"
+        },
+        "bucket_empty": {
+            "textures": "textures/items/bucket_empty"
+        },
+        "bucket_water": {
+            "textures": "textures/items/bucket_water"
+        },
+        "bucket_lava": {
+            "textures": "textures/items/bucket_lava"
+        },
+        "bucket_milk": {
+            "textures": "textures/items/bucket_milk"
+        },
+        "saddle": {
+            "textures": "textures/items/saddle"
+        },
+        "sign": {
+            "textures": "textures/items/sign"
+        },
+        "sign_spruce": {
+            "textures": "textures/items/sign_spruce"
+        },
+        "sign_birch": {
+            "textures": "textures/items/sign_birch"
+        },
+        "snowball": {
+            "textures": "textures/items/snowball"
+        },
+        "egg": {
+            "textures": "textures/items/egg"
+        },
+        "beef_raw": {
+            "textures": "textures/items/beef_raw"
+        },
+        "beef_cooked": {
+            "textures": "textures/items/beef_cooked"
+        },
+        "chicken_raw": {
+            "textures": "textures/items/chicken_raw"
+        },
+        "chicken_cooked": {
+            "textures": "textures/items/chicken_cooked"
+        },
+        "mutton_raw": {
+            "textures": "textures/items/mutton_raw"
+        },
+        "mutton_cooked": {
+            "textures": "textures/items/mutton_cooked"
+        },
+        "cake": {
+            "textures": "textures/items/cake"
         }
     }
 }

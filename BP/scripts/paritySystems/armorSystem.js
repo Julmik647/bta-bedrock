@@ -56,11 +56,19 @@ const IGNORE_ARMOR_SOURCES = new Set([
 
 class BetaArmorSystem {
     constructor() {
-        // Run UI update frequently (every 5 ticks / 0.25s)
-        // system.runInterval(this.updateUI.bind(this), 5);
+        // Hybrid Optimization:
+        // 1. Slow poll (3s) for equipment changes (putting on armor)
+        // 2. Instant update on damage (in onHurt)
+        system.runInterval(this.updateUI.bind(this), 60);
         
         // Handle Damage Logic
-        world.afterEvents.entityHurt.subscribe(this.onHurt.bind(this));
+        world.afterEvents.entityHurt.subscribe((ev) => {
+            this.onHurt(ev);
+            // Instant UI update when hit
+            if (ev.hurtEntity.typeId === 'minecraft:player') {
+                this.updateUI(ev.hurtEntity);
+            }
+        });
     }
 
     /**
@@ -76,7 +84,14 @@ class BetaArmorSystem {
 
         for (const slot of slots) {
             const item = equippable.getEquipment(slot);
-            if (!item || !BETA_STATS[item.typeId]) continue;
+            if (!item) continue;
+            
+            // debug: log what armor is found
+            if (CONFIG.DEBUG) {
+                console.log(`[ARMOR] Slot ${slot}: ${item.typeId}`);
+            }
+            
+            if (!BETA_STATS[item.typeId]) continue;
 
             const basePoints = BETA_STATS[item.typeId];
             let factor = 1.0;
@@ -96,29 +111,49 @@ class BetaArmorSystem {
         return totalPoints;
     }
 
-    updateUI() {
-        for (const player of world.getPlayers()) {
+    updateUI(specificPlayer = null) {
+        const players = specificPlayer ? [specificPlayer] : world.getPlayers();
+        for (const player of players) {
             try {
                 const rawPoints = this.calculatePoints(player);
                 
-                // Rounding Logic:
-                // Beta armor bar has 10 icons (20 half-icons).
-                // We assume your font pack has 21 glyphs: _a00 (empty) to _a20 (full).
-                
-                let displayPoints = Math.round(rawPoints);
+                // Get previous state
+                const lastPoints = player.lastArmorPoints ?? -1;
+                const lastUpdateTime = player.lastArmorUpdate ?? 0;
+                const currentTime = system.currentTick;
+        
+                // Only update if points changed OR it's been > 100 ticks (5 seconds) to keep title alive
+                if (rawPoints !== lastPoints || (currentTime - lastUpdateTime) > 100) {
+                    
+                    let displayPoints = Math.round(rawPoints);
 
-                // VISUAL FIX: If you are wearing armor but have < 0.5 points (due to damage),
-                // forcing it to 1 ensures you see at least "half a shirt" instead of empty.
-                if (rawPoints > 0 && displayPoints === 0) displayPoints = 1;
+                    // VISUAL FIX: If you are wearing armor but have < 0.5 points (due to damage),
+                    // forcing it to 1 ensures you see at least "half a shirt" instead of empty.
+                    if (rawPoints > 0 && displayPoints === 0) displayPoints = 1;
 
-                // Format: _a02, _a10, _a20
-                const spriteId = displayPoints.toString().padStart(2, '0');
-                const hudText = `_a${spriteId}`;
+                    // Format: _a02, _a10, _a20
+                    const spriteId = displayPoints.toString().padStart(2, '0');
+                    const hudText = `_a${spriteId}`;
 
-                // Render to Action Bar
-                player.onScreenDisplay.setActionBar(hudText);
+                    // Render to Title (HUD reads from #hud_title_text_string)
+                    player.onScreenDisplay.setTitle(hudText, {
+                        fadeInDuration: 0,
+                        fadeOutDuration: 0,
+                        stayDuration: 200 // 10 seconds
+                    });
+                    
+                    // Update state
+                    player.lastArmorPoints = rawPoints;
+                    player.lastArmorUpdate = currentTime;
 
-            } catch (e) {}
+                    if (CONFIG.DEBUG && rawPoints !== lastPoints) {
+                        console.warn(`[ARMOR] Updated ${player.name} to ${hudText}`);
+                    }
+                }
+
+            } catch (e) {
+                console.error(`[ARMOR] Error: ${e}`);
+            }
         }
     }
 

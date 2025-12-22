@@ -89,4 +89,4 @@ system.runInterval(() => {
             }
         }
     }
-}, 2); // check every 2 ticks for responsiveness
+}, 4); // check every 4 ticks - still responsive, 50% less work

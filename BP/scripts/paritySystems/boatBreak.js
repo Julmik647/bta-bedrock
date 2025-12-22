@@ -39,30 +39,59 @@ function breakBoatWithItem(boat) {
   dim.spawnItem(new ItemStack("minecraft:oak_boat", 1), loc);
 }
 
-// boat collision check (every 5 ticks)
+// MERGED: collision check + water trails in single loop
 system.runInterval(() => {
   const overworld = world.getDimension("overworld");
+  const boats = overworld.getEntities({ type: "minecraft:boat" });
 
-  for (const boat of overworld.getEntities({ type: "minecraft:boat" })) {
+  for (const boat of boats) {
     const loc = boat.location;
     const x = Math.floor(loc.x);
     const y = Math.floor(loc.y);
     const z = Math.floor(loc.z);
 
+    // collision check
     const offsets = [
       { x: x + 1, z }, { x: x - 1, z },
       { x, z: z + 1 }, { x, z: z - 1 }
     ];
 
+    let broken = false;
     for (const offset of offsets) {
       const block = overworld.getBlock({ x: offset.x, y, z: offset.z });
       if (isSolidBlock(block)) {
         breakBoatWithParts(boat);
+        broken = true;
         break;
       }
     }
+    
+    if (broken) continue;
+
+    // water trails (only if moving)
+    const vel = boat.getVelocity?.();
+    if (!vel || (Math.abs(vel.x) < 0.01 && Math.abs(vel.z) < 0.01)) continue;
+
+    const blockBelow = overworld.getBlock({
+      x: Math.floor(loc.x),
+      y: Math.floor(loc.y - 0.3),
+      z: Math.floor(loc.z)
+    });
+
+    if (!blockBelow || blockBelow.typeId !== "minecraft:water") continue;
+
+    const dir = normalize({ x: vel.x, y: 0, z: vel.z });
+    const offset = multiply(dir, -1);
+
+    const bubblePos = {
+      x: loc.x + offset.x,
+      y: loc.y + 0.1,
+      z: loc.z + offset.z
+    };
+
+    boat.dimension.spawnParticle("minecraft:basic_bubble_particle_gradual", bubblePos);
   }
-}, 10);
+}, 10); // single interval at 10 ticks
 
 // player punch -> boat item
 world.afterEvents.entityHitEntity.subscribe(event => {
@@ -74,33 +103,3 @@ world.afterEvents.entityHitEntity.subscribe(event => {
     breakBoatWithItem(hitEntity);
   }
 });
-
-// water trails
-system.runInterval(() => {
-  const overworld = world.getDimension("overworld");
-
-  for (const boat of overworld.getEntities({ type: "minecraft:boat" })) {
-    const vel = boat.getVelocity?.();
-    if (!vel || (Math.abs(vel.x) < 0.01 && Math.abs(vel.z) < 0.01)) continue;
-
-    const boatPos = boat.location;
-    const blockBelow = overworld.getBlock({
-      x: Math.floor(boatPos.x),
-      y: Math.floor(boatPos.y - 0.3),
-      z: Math.floor(boatPos.z)
-    });
-
-    if (!blockBelow || blockBelow.typeId !== "minecraft:water") continue;
-
-    const dir = normalize({ x: vel.x, y: 0, z: vel.z });
-    const offset = multiply(dir, -1); 
-
-    const bubblePos = {
-      x: boatPos.x + offset.x,
-      y: boatPos.y + 0.1,
-      z: boatPos.z + offset.z
-    };
-
-    boat.dimension.spawnParticle("minecraft:basic_bubble_particle_gradual", bubblePos);
-  }
-}, 8);

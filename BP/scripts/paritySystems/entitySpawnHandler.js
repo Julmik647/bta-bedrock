@@ -94,3 +94,18 @@ world.afterEvents.entitySpawn.subscribe((event) => {
 
     } catch {}
 });
+// 4. zombie feather drops (beta loot)
+world.afterEvents.entityDie.subscribe((event) => {
+    try {
+        const { deadEntity } = event;
+        const type = deadEntity.typeId;
+        
+        if (type === "minecraft:zombie" || type === "minecraft:zombie_villager" || type === "minecraft:husk") {
+            // chance for feathers (0-2)
+            const count = Math.floor(Math.random() * 3);
+            if (count > 0) {
+                deadEntity.dimension.spawnItem(new ItemStack("minecraft:feather", count), deadEntity.location);
+            }
+        }
+    } catch (e) {}
+});

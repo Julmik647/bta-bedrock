@@ -1,0 +1,16 @@
+{
+  "format_version": "1.20.50",
+  "minecraft:item": {
+    "description": {
+      "identifier": "minecraft:saddle",
+      "menu_category": {
+        "category": "items",
+        "group": "itemGroup.name.horseEquipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": "saddle",
+      "minecraft:max_stack_size": 1
+    }
+  }
+}
