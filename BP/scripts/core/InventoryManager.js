@@ -87,7 +87,7 @@ const ALLOWED = new Set([
     "minecraft:water", "minecraft:lava",
 
     // custom/meta
-    "bh:bow", "bh:crafting_table", "hrb:herobrine_settings", "hrb:script_openSettings", "minecraft:barrier"
+    "bh:bow", "bh:fence", "bh:crafting_table", "hrb:herobrine_settings", "hrb:script_openSettings", "minecraft:barrier"
 ]);
 
 // conversions: modern -> beta equivalent
@@ -167,7 +167,10 @@ const CONVERSIONS = {
     "minecraft:rotten_flesh": "minecraft:feather",
     
     // bow
-    "minecraft:bow": "bh:bow"
+    "minecraft:bow": "bh:bow",
+
+    // fence
+    "minecraft:fence": "bh:fence"
 };
 
 // food: vanilla -> custom unstackable (spawns 1 per stack item)

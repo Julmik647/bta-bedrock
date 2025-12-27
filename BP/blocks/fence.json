@@ -1,0 +1,177 @@
+{
+    "format_version": "1.21.0",
+    "minecraft:block": {
+        "description": {
+            "identifier": "bh:fence",
+            "menu_category": {
+                "category": "construction",
+                "group": "itemGroup.name.fence"
+            },
+            "states": {
+                "bh:north": [false, true],
+                "bh:east": [false, true],
+                "bh:south": [false, true],
+                "bh:west": [false, true]
+            }
+        },
+        "components": {
+            "minecraft:display_name": "Fence",
+            "minecraft:destructible_by_mining": {
+                "seconds_to_destroy": 3.0
+            },
+            "minecraft:flammable": {
+                "burn_odds": 20,
+                "flame_odds": 20
+            },
+            "minecraft:material_instances": {
+                "*": {
+                    "texture": "planks_oak",
+                    "render_method": "alpha_test"
+                }
+            },
+            "minecraft:geometry": {
+                "identifier": "geometry.bh_fence",
+                "bone_visibility": {
+                    "north": "q.block_state('bh:north')",
+                    "east": "q.block_state('bh:east')",
+                    "south": "q.block_state('bh:south')",
+                    "west": "q.block_state('bh:west')"
+                }
+            }
+        },
+        "permutations": [
+            {
+                "condition": "q.block_state('bh:north') && !q.block_state('bh:south') && !q.block_state('bh:east') && !q.block_state('bh:west')",
+                "components": {
+                    "minecraft:selection_box": { "origin": [-2, 0, -8], "size": [4, 16, 10] },
+                    "minecraft:collision_box": { "origin": [-2, 0, -8], "size": [4, 24, 10] }
+                }
+            },
+            {
+                "condition": "!q.block_state('bh:north') && q.block_state('bh:south') && !q.block_state('bh:east') && !q.block_state('bh:west')",
+                "components": {
+                    "minecraft:selection_box": { "origin": [-2, 0, -2], "size": [4, 16, 10] },
+                    "minecraft:collision_box": { "origin": [-2, 0, -2], "size": [4, 24, 10] }
+                }
+            },
+            {
+                "condition": "!q.block_state('bh:north') && !q.block_state('bh:south') && q.block_state('bh:east') && !q.block_state('bh:west')",
+                "components": {
+                    "minecraft:selection_box": { "origin": [-2, 0, -2], "size": [10, 16, 4] },
+                    "minecraft:collision_box": { "origin": [-2, 0, -2], "size": [10, 24, 4] }
+                }
+            },
+            {
+                "condition": "!q.block_state('bh:north') && !q.block_state('bh:south') && !q.block_state('bh:east') && q.block_state('bh:west')",
+                "components": {
+                    "minecraft:selection_box": { "origin": [-8, 0, -2], "size": [10, 16, 4] },
+                    "minecraft:collision_box": { "origin": [-8, 0, -2], "size": [10, 24, 4] }
+                }
+            },
+            {
+                "condition": "q.block_state('bh:north') && q.block_state('bh:east') && !q.block_state('bh:south') && !q.block_state('bh:west')",
+                "components": {
+                    "minecraft:collision_box": [
+                        { "origin": [-2, 0, -8], "size": [4, 24, 10] },
+                        { "origin": [-2, 0, -2], "size": [10, 24, 4] }
+                    ],
+                    "minecraft:selection_box": { "origin": [-2, 0, -8], "size": [10, 16, 10] }
+                }
+            },
+            {
+                "condition": "q.block_state('bh:north') && q.block_state('bh:west') && !q.block_state('bh:south') && !q.block_state('bh:east')",
+                "components": {
+                    "minecraft:collision_box": [
+                        { "origin": [-2, 0, -8], "size": [4, 24, 10] },
+                        { "origin": [-8, 0, -2], "size": [10, 24, 4] }
+                    ],
+                    "minecraft:selection_box": { "origin": [-8, 0, -8], "size": [10, 16, 10] }
+                }
+            },
+            {
+                "condition": "q.block_state('bh:south') && q.block_state('bh:east') && !q.block_state('bh:north') && !q.block_state('bh:west')",
+                "components": {
+                    "minecraft:collision_box": [
+                        { "origin": [-2, 0, -2], "size": [4, 24, 10] },
+                        { "origin": [-2, 0, -2], "size": [10, 24, 4] }
+                    ],
+                    "minecraft:selection_box": { "origin": [-2, 0, -2], "size": [10, 16, 10] }
+                }
+            },
+            {
+                "condition": "q.block_state('bh:south') && q.block_state('bh:west') && !q.block_state('bh:north') && !q.block_state('bh:east')",
+                "components": {
+                    "minecraft:collision_box": [
+                        { "origin": [-2, 0, -2], "size": [4, 24, 10] },
+                        { "origin": [-8, 0, -2], "size": [10, 24, 4] }
+                    ],
+                    "minecraft:selection_box": { "origin": [-8, 0, -2], "size": [10, 16, 10] }
+                }
+            },
+            {
+                "condition": "q.block_state('bh:north') && q.block_state('bh:south') && !q.block_state('bh:east') && !q.block_state('bh:west')",
+                "components": {
+                    "minecraft:collision_box": { "origin": [-2, 0, -8], "size": [4, 24, 16] },
+                    "minecraft:selection_box": { "origin": [-2, 0, -8], "size": [4, 16, 16] }
+                }
+            },
+            {
+                "condition": "!q.block_state('bh:north') && !q.block_state('bh:south') && q.block_state('bh:east') && q.block_state('bh:west')",
+                "components": {
+                    "minecraft:collision_box": { "origin": [-8, 0, -2], "size": [16, 24, 4] },
+                    "minecraft:selection_box": { "origin": [-8, 0, -2], "size": [16, 16, 4] }
+                }
+            },
+            {
+                "condition": "!q.block_state('bh:north') && q.block_state('bh:south') && q.block_state('bh:east') && q.block_state('bh:west')",
+                "components": {
+                    "minecraft:collision_box": [
+                        { "origin": [-2, 0, -2], "size": [4, 24, 10] },
+                        { "origin": [-8, 0, -2], "size": [16, 24, 4] }
+                    ],
+                    "minecraft:selection_box": { "origin": [-8, 0, -2], "size": [16, 16, 10] }
+                }
+            },
+            {
+                "condition": "q.block_state('bh:north') && !q.block_state('bh:south') && q.block_state('bh:east') && q.block_state('bh:west')",
+                "components": {
+                    "minecraft:collision_box": [
+                        { "origin": [-2, 0, -8], "size": [4, 24, 10] },
+                        { "origin": [-8, 0, -2], "size": [16, 24, 4] }
+                    ],
+                    "minecraft:selection_box": { "origin": [-8, 0, -8], "size": [16, 16, 10] }
+                }
+            },
+            {
+                "condition": "q.block_state('bh:north') && q.block_state('bh:south') && !q.block_state('bh:east') && q.block_state('bh:west')",
+                "components": {
+                    "minecraft:collision_box": [
+                        { "origin": [-2, 0, -8], "size": [4, 24, 16] },
+                        { "origin": [-8, 0, -2], "size": [10, 24, 4] }
+                    ],
+                    "minecraft:selection_box": { "origin": [-8, 0, -8], "size": [10, 16, 16] }
+                }
+            },
+            {
+                "condition": "q.block_state('bh:north') && q.block_state('bh:south') && q.block_state('bh:east') && !q.block_state('bh:west')",
+                "components": {
+                    "minecraft:collision_box": [
+                        { "origin": [-2, 0, -8], "size": [4, 24, 16] },
+                        { "origin": [-2, 0, -2], "size": [10, 24, 4] }
+                    ],
+                    "minecraft:selection_box": { "origin": [-2, 0, -8], "size": [10, 16, 16] }
+                }
+            },
+            {
+                "condition": "q.block_state('bh:north') && q.block_state('bh:south') && q.block_state('bh:east') && q.block_state('bh:west')",
+                "components": {
+                    "minecraft:collision_box": [
+                        { "origin": [-2, 0, -8], "size": [4, 24, 16] },
+                        { "origin": [-8, 0, -2], "size": [16, 24, 4] }
+                    ],
+                    "minecraft:selection_box": { "origin": [-8, 0, -8], "size": [16, 16, 16] }
+                }
+            }
+        ]
+    }
+}

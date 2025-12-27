@@ -20,10 +20,13 @@
         "total_supply": 15,
         "suffocate_time": 0
       },
+      "minecraft:loot": {
+        "table": "loot_tables/entities/spider.json"
+      },
       "minecraft:nameable": {},
       "minecraft:collision_box": {
-        "width": 1.4,
-        "height": 0.9
+        "width": 1.1,
+        "height": 0.7
       },
       "minecraft:health": {
         "value": 16,

@@ -1464,32 +1464,28 @@
                     "load_on_low_memory": true,
                     "name": "sounds/mob/ghast/moan1",
                     "volume": 0.50
-                },
-                {
-                    "name": "sounds/mob/ghast/moan2",
-                    "volume": 0.50
-                },
-                {
-                    "name": "sounds/mob/ghast/moan3",
-                    "volume": 0.50
-                },
-                {
-                    "name": "sounds/mob/ghast/moan4",
-                    "volume": 0.50
-                },
-                {
-                    "name": "sounds/mob/ghast/moan5",
-                    "volume": 0.50
-                },
-                {
-                    "name": "sounds/mob/ghast/moan6",
-                    "volume": 0.50
-                },
-                {
-                    "name": "sounds/mob/ghast/moan7",
-                    "volume": 0.50
                 }
             ]
+        },
+        "random.burp": {
+            "category": "player",
+            "sounds": []
+        },
+        "random.click": {
+            "category": "player",
+            "sounds": [
+                "sounds/random/click"
+            ]
+        },
+        "random.drink": {
+            "category": "player",
+            "sounds": [
+                "sounds/random/drink"
+            ]
+        },
+        "random.eat": {
+            "category": "player",
+            "sounds": []
         },
         "mob.ghast.scream": {
             "__use_legacy_max_distance": "true",
@@ -5403,6 +5399,14 @@
                 "sounds/dig/wood3",
                 "sounds/dig/wood4"
             ]
+        },
+        "random.burp": {
+            "category": "player",
+            "sounds": []
+        },
+        "random.eat": {
+            "category": "player",
+            "sounds": []
         }
     }
 }

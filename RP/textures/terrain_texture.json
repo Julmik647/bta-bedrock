@@ -185,6 +185,8 @@
         "tall_grass_top": { "textures": "textures/blocks/invisible" },
         "tall_grass_bottom": { "textures": "textures/blocks/invisible" },
         
+        "flower_rose": { "textures": "textures/blocks/flower_rose" },
+        "poppy": { "textures": "textures/blocks/flower_rose" },
         "flower_cornflower": { "textures": "textures/blocks/invisible" },
         "flower_lily_of_the_valley": { "textures": "textures/blocks/invisible" },
         "flower_blue_orchid": { "textures": "textures/blocks/invisible" },
