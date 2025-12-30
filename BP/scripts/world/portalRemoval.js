@@ -4,7 +4,6 @@ console.warn("[keirazelle] Portal Removal System Loaded");
 
 const RUINED_PORTAL_BLOCKS = new Set([
     "minecraft:crying_obsidian",
-    "minecraft:netherrack",
     "minecraft:magma"
 ]);
 

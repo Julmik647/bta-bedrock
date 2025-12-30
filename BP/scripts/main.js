@@ -20,10 +20,11 @@ import './gameplay/instantBonemeal.js';
 import './gameplay/placementSystem.js';
 import './gameplay/playerLoop.js'; // loop optimization
 import './gameplay/PortalDeathFix.js';
+import './gameplay/farmlandProtection.js';
 // import './gameplay/fenceSystem.js'; // disabled for now
 
 // world gen
-import './world/chunk_scrubber.js';
+// import './world/chunk_scrubber.js'; // disabled, pregenerated world
 import './world/portalRemoval.js';
 // import './world/rough_bedrock.js'; // disabled for now
 import './world/netherIce.js';

@@ -15,12 +15,12 @@ const FOOD_ITEMS = Object.freeze({
   "minecraft:mushroom_stew": { health: 10, returnContainer: "minecraft:bowl" }
 });
 
-const CAKE_CONFIG = {
+const CAKE_CONFIG = Object.freeze({
   blockId: "minecraft:cake",
   healthRestore: 3,
   maxBites: 6,
   stateProperty: "bite_counter"
-};
+});
 
 class FoodSystem {
   constructor() {

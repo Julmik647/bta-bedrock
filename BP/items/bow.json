@@ -25,6 +25,9 @@
         "saturation_modifier": 0,
         "can_always_eat": true,
         "using_converts_to": "bh:bow"
+      },
+      "minecraft:durability": {
+        "max_durability": 385
       }
     }
   }

@@ -1,20 +1,18 @@
-import { world } from "@minecraft/server";
+// machine gun bow, no charge time like beta 1.7.3
+import { world, ItemStack } from "@minecraft/server";
 
 console.warn("[keirazelle] bow loaded");
 
 world.afterEvents.itemCompleteUse.subscribe(({ source: player, itemStack: item }) => {
     
-    // check id
     if (item?.typeId !== "bh:bow") return;
 
-    // creative check
     const isCreative = player.getGameMode() === "creative";
+    const inv = player.getComponent("inventory")?.container;
+    if (!inv) return;
     
-    // surv ammo check
+    // surv needs arrows
     if (!isCreative) {
-        const inv = player.getComponent("inventory")?.container;
-        if (!inv) return;
-
         let hasArrow = false;
         for (let i = 0; i < inv.size; i++) {
             const slotItem = inv.getItem(i);
@@ -32,11 +30,28 @@ world.afterEvents.itemCompleteUse.subscribe(({ source: player, itemStack: item }
         if (!hasArrow) return;
     }
 
-    // calc
+    // damage the bow
+    if (!isCreative) {
+        const slot = player.selectedSlotIndex;
+        const heldBow = inv.getItem(slot);
+        if (heldBow?.typeId === "bh:bow") {
+            const dur = heldBow.getComponent("durability");
+            if (dur) {
+                dur.damage += 1;
+                // break if maxed
+                if (dur.damage >= dur.maxDurability) {
+                    inv.setItem(slot, undefined);
+                    player.playSound("random.break");
+                } else {
+                    inv.setItem(slot, heldBow);
+                }
+            }
+        }
+    }
+
+    // spawn arrow
     const dir = player.getViewDirection();
     const head = player.getHeadLocation();
-
-    // 1.5 offset
     const spawn = { 
         x: head.x + dir.x * 1.5, 
         y: head.y + dir.y * 1.5, 
@@ -52,10 +67,9 @@ world.afterEvents.itemCompleteUse.subscribe(({ source: player, itemStack: item }
             proj.shoot(dir, { uncertainty: 1.0, power: 3.0 });
         }
 
-        // play bow sound manually 
         player.playSound("random.bow", { 
             volume: 0.5, 
             pitch: 1.1 + Math.random() * 0.4 
         });
-    } catch {}
+    } catch (e) {}
 });
