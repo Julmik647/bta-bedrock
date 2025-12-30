@@ -1,10 +1,14 @@
 import { world, system } from "@minecraft/server";
-
 console.warn("[keirazelle] Entity Cleaner Module Loaded");
 
-// ban list 
-const BANNED_MOBS = new Set([
-    // villagers & illagers
+const CONFIG = Object.freeze({
+    CHECK_INTERVAL: 100,
+    CHECK_RADIUS: 32
+});
+
+// mobs that shouldnt exist in beta
+const BANNED_MOBS = Object.freeze(new Set([
+    // villagers and illagers
     "minecraft:villager",
     "minecraft:villager_v2",
     "minecraft:zombie_villager",
@@ -38,7 +42,7 @@ const BANNED_MOBS = new Set([
     "minecraft:bogged",
     "minecraft:warden",
 
-    // other mobs:p
+    // modern animals
     "minecraft:horse",
     "minecraft:donkey",
     "minecraft:mule",
@@ -74,20 +78,35 @@ const BANNED_MOBS = new Set([
     "minecraft:zoglin",
     "minecraft:strider",
     "minecraft:magma_cube"
-]);
+]));
 
-system.runInterval(() => {
-    for (const player of world.getPlayers()) {
+// generator for async entity cleanup
+function* cleanerJob() {
+    const players = world.getAllPlayers();
+    
+    for (const player of players) {
+        if (!player.isValid()) continue;
+        
         try {
-            const dim = player.dimension;
-            const entities = dim.getEntities({ location: player.location, maxDistance: 32 });
+            const entities = player.dimension.getEntities({
+                location: player.location,
+                maxDistance: CONFIG.CHECK_RADIUS
+            });
             
             for (const ent of entities) {
-                // fast lookup
                 if (BANNED_MOBS.has(ent.typeId)) {
                     ent.remove();
                 }
+                yield;
             }
-        } catch (e) {}
+        } catch (e) {
+            console.warn(`[entityCleaner] error: ${e}`);
+        }
+        
+        yield;
     }
-}, 100); // 5 seconds is fine for lazy cleaning
+}
+
+system.runInterval(() => {
+    system.runJob(cleanerJob());
+}, CONFIG.CHECK_INTERVAL);

@@ -95,7 +95,7 @@
       },
       "minecraft:navigation.walk": {
         "can_path_over_water": false,
-        "avoid_damage_blocks": true,
+        "avoid_damage_blocks": false,
         "is_amphibious": false
       },
       "minecraft:movement.basic": {},

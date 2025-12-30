@@ -86,7 +86,7 @@ const ALLOWED = Object.freeze(new Set([
     "minecraft:water", "minecraft:lava",
 
     // custom/meta
-    "bh:bow", "bh:fence", "bh:crafting_table", "bh:wooden_slab", "hrb:herobrine_settings", "hrb:script_openSettings", "minecraft:barrier"
+    "bh:bow", "bh:crafting_table", "bh:wooden_slab", "hrb:herobrine_settings", "hrb:script_openSettings", "minecraft:barrier"
 ]));
 
 const CONVERSIONS = Object.freeze({
@@ -166,7 +166,6 @@ const CONVERSIONS = Object.freeze({
 
     // bow & fence
     "minecraft:bow": "bh:bow",
-    "minecraft:oak_fence": "bh:fence",
     
     // slab
     "minecraft:oak_slab": "bh:wooden_slab"
@@ -254,7 +253,16 @@ function processInventory(player) {
 
         // 3. convert modern -> beta
         if (CONVERSIONS[id]) {
-            inv.setItem(i, new ItemStack(CONVERSIONS[id], item.amount));
+            const newItem = new ItemStack(CONVERSIONS[id], item.amount);
+            
+            // preserve durability if item has it
+            const oldDur = item.getComponent("durability");
+            const newDur = newItem.getComponent("durability");
+            if (oldDur && newDur) {
+                newDur.damage = oldDur.damage;
+            }
+            
+            inv.setItem(i, newItem);
             continue;
         }
 

@@ -21,9 +21,6 @@
     "locator_bar": {
         "ignored": true
     },
-    "hunger_renderer": {
-        "ignored": true
-    },
     "cursor_renderer": {
         "ignored": true
     },
@@ -771,16 +768,6 @@
                     "offset": [
                         -1,
                         -33
-                    ],
-                    "anchor_from": "bottom_left",
-                    "anchor_to": "bottom_left"
-                }
-            },
-            {
-                "armor_rend@hud.armor_icon": {
-                    "offset": [
-                        101,
-                        -25
                     ],
                     "anchor_from": "bottom_left",
                     "anchor_to": "bottom_left"

@@ -1,11 +1,8 @@
 import { world, ItemStack } from "@minecraft/server";
 console.warn("[keirazelle] Entity Spawn Handler Loaded");
 
-// unified spawn handler - handles all entity spawn logic in one place
-// replaces: mobSpawning.js, noExperience.js, oreDrops.js, betaLoot.js
-
 // beta 1.7.3 allowed mobs
-const ALLOWED_MOBS = new Set([
+const ALLOWED_MOBS = Object.freeze(new Set([
     "minecraft:item",
     "minecraft:minecart",
     "minecraft:chest_minecart",
@@ -34,19 +31,19 @@ const ALLOWED_MOBS = new Set([
     "minecraft:snowball",
     "minecraft:egg",
     "minecraft:fishing_hook"
-]);
+]));
 
-// ore drop replacements (raw -> ore block)
-const ORE_REPLACEMENTS = {
+// ore drops that need replacing
+const ORE_REPLACEMENTS = Object.freeze({
     "minecraft:raw_iron": "minecraft:iron_ore",
     "minecraft:raw_gold": "minecraft:gold_ore",
     "minecraft:raw_copper": "minecraft:iron_ore"
-};
+});
 
-// banned item drops
-const BANNED_ITEMS = new Set([
+// items that shouldnt drop naturally
+const BANNED_ITEMS = Object.freeze(new Set([
     "minecraft:rotten_flesh"
-]);
+]));
 
 world.afterEvents.entitySpawn.subscribe((event) => {
     try {
@@ -55,13 +52,13 @@ world.afterEvents.entitySpawn.subscribe((event) => {
         
         const typeId = entity.typeId;
 
-        // 1. xp orb removal
+        // nuke xp orbs
         if (typeId === "minecraft:xp_orb") {
             entity.remove();
             return;
         }
 
-        // 2. item entity processing
+        // item entity processing
         if (typeId === "minecraft:item") {
             const itemComp = entity.getComponent("minecraft:item");
             if (!itemComp?.itemStack) return;
@@ -69,7 +66,7 @@ world.afterEvents.entitySpawn.subscribe((event) => {
             const itemId = itemComp.itemStack.typeId;
             const amount = itemComp.itemStack.amount;
 
-            // banned items (rotten flesh etc)
+            // banned items get deleted
             if (BANNED_ITEMS.has(itemId)) {
                 entity.remove();
                 return;
@@ -84,28 +81,33 @@ world.afterEvents.entitySpawn.subscribe((event) => {
                 return;
             }
             
-            return; // items are allowed, stop here
+            return;
         }
 
-        // 3. mob whitelist check
+        // mob whitelist
         if (!ALLOWED_MOBS.has(typeId)) {
             entity.remove();
         }
 
-    } catch {}
+    } catch (e) {
+        console.warn(`[entitySpawnHandler] error: ${e}`);
+    }
 });
-// 4. zombie feather drops (beta loot)
+
+// zombie feather drops
 world.afterEvents.entityDie.subscribe((event) => {
     try {
         const { deadEntity } = event;
         const type = deadEntity.typeId;
         
+        // zombies drop feathers in beta
         if (type === "minecraft:zombie" || type === "minecraft:zombie_villager" || type === "minecraft:husk") {
-            // chance for feathers (0-2)
             const count = Math.floor(Math.random() * 3);
             if (count > 0) {
                 deadEntity.dimension.spawnItem(new ItemStack("minecraft:feather", count), deadEntity.location);
             }
         }
-    } catch (e) {}
+    } catch (e) {
+        console.warn(`[entitySpawnHandler] death handler error: ${e}`);
+    }
 });

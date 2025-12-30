@@ -1,31 +1,44 @@
 import { world, system } from "@minecraft/server";
 console.warn("[keirazelle] Fog Fix Loaded");
 
-// Track which players have fog applied
+const CONFIG = Object.freeze({
+    CHECK_INTERVAL: 20,
+    FOG_ID: "beta"
+});
+
 const hasFog = new Set();
 
-// Run every 1 second
-system.runInterval(() => {
-  for (const player of world.getPlayers()) {
-    const name = player.name;
-    const dim = player.dimension.id;
+function* fogJob() {
+    const players = world.getAllPlayers();
+    
+    for (const player of players) {
+        try {
+            const name = player.name;
+            const dim = player.dimension.id;
 
-    try {
-      // Apply fog when in the Overworld
-      if (dim === "minecraft:overworld") {
-        if (!hasFog.has(name)) {
-          player.runCommand(`fog @s push classic_water:default_fog beta`);
-          hasFog.add(name);
+            if (dim === "minecraft:overworld") {
+                if (!hasFog.has(name)) {
+                    player.runCommand(`fog @s push classic_water:default_fog ${CONFIG.FOG_ID}`);
+                    hasFog.add(name);
+                }
+            } else {
+                if (hasFog.has(name)) {
+                    player.runCommand(`fog @s pop "${CONFIG.FOG_ID}"`);
+                    hasFog.delete(name);
+                }
+            }
+        } catch (e) {
+            console.warn(`[fogFix] error: ${e}`);
         }
-      } else {
-        // Remove fog when not in Overworld
-        if (hasFog.has(name)) {
-          player.runCommand(`fog @s pop "beta"`);
-          hasFog.delete(name);
-        }
-      }
-    } catch (e) {
-      console.warn(`Fog error for ${name}: ${e}`);
+        yield;
     }
-  }
-}, 20); // Run every second
+}
+
+system.runInterval(() => {
+    system.runJob(fogJob());
+}, CONFIG.CHECK_INTERVAL);
+
+// cleanup on leave
+world.afterEvents.playerLeave.subscribe((event) => {
+    hasFog.delete(event.playerName);
+});

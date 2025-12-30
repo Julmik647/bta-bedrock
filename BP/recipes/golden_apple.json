@@ -4,13 +4,13 @@
     "description": {
       "identifier": "minecraft:golden_apple"
     },
-    "tags": [ "crafting_table" ],
+    "tags": ["crafting_table"],
     "unlock": [
-      { "item": "minecraft:apple" } 
+      { "item": "minecraft:apple" }
     ],
-    "pattern": [ "XXX", "XYX", "XXX" ],
+    "pattern": ["XXX", "XYX", "XXX"],
     "key": {
-      "X": { "item": "minecraft:gold_nugget" },
+      "X": { "item": "minecraft:gold_block" },
       "Y": { "item": "minecraft:apple" }
     },
     "result": { "item": "minecraft:golden_apple" }

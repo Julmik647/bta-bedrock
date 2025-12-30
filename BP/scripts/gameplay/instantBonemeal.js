@@ -1,10 +1,10 @@
 import { world, system } from "@minecraft/server";
 console.warn("[keirazelle] Instant Bonemeal Loaded");
 
-const BLOCKED_TARGETS = new Set([
+const BLOCKED_TARGETS = Object.freeze(new Set([
     "minecraft:brown_mushroom",
     "minecraft:red_mushroom"
-]);
+]));
 
 world.beforeEvents.itemUseOn.subscribe((event) => {
     try {

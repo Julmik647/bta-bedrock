@@ -1,65 +1,81 @@
 import { world, system } from "@minecraft/server";
-
 console.warn("[keirazelle] Beta Animal AI Loaded");
 
-// beta 1.7.3 style animals randomly hop around
-const PASSIVE_MOBS = new Set([
+const CONFIG = Object.freeze({
+    CHECK_INTERVAL: 100,
+    CLEANUP_INTERVAL: 600,
+    HURT_COOLDOWN_TICKS: 160, // 8 seconds
+    JUMP_COOLDOWN_MIN: 200,   // 10 seconds
+    JUMP_COOLDOWN_MAX: 600,   // 30 seconds
+    NEARBY_RADIUS: 8,
+    BASE_JUMP_CHANCE: 0.15,
+    NEIGHBOR_BONUS: 0.10,
+    MAX_JUMP_CHANCE: 0.50,
+    JUMP_IMPULSE: 0.42
+});
+
+// beta passives
+const PASSIVE_MOBS = Object.freeze(new Set([
     "minecraft:pig",
     "minecraft:cow",
     "minecraft:sheep",
     "minecraft:chicken"
-]);
+]));
 
+// tick based cooldowns
 const hurtCooldowns = new Map();
 const jumpCooldowns = new Map();
+let currentTick = 0;
+
+// track ticks
+system.runInterval(() => { currentTick++; }, 1);
 
 world.afterEvents.entityHurt.subscribe((ev) => {
     if (PASSIVE_MOBS.has(ev.hurtEntity.typeId)) {
-        hurtCooldowns.set(ev.hurtEntity.id, Date.now() + 8000);
+        hurtCooldowns.set(ev.hurtEntity.id, currentTick + CONFIG.HURT_COOLDOWN_TICKS);
     }
 });
 
-// generator to process entities over multiple ticks
+// generator for entity processing
 function* animalJumpJob() {
     const overworld = world.getDimension("overworld");
-    const sentities = [...overworld.getEntities()]; // snapshot
-    // filter first to avoid processing non-passives
-    const candidates = sentities.filter(e => PASSIVE_MOBS.has(e.typeId));
-
-    for (const entity of candidates) {
-        if (!entity.isValid()) continue; // entity might have died since snapshot
+    const entities = overworld.getEntities();
+    
+    for (const entity of entities) {
+        if (!PASSIVE_MOBS.has(entity.typeId)) continue;
+        if (!entity.isValid()) continue;
         
-        const now = Date.now();
         const entityId = entity.id;
 
-        // check stuns
-        if (hurtCooldowns.has(entityId)) {
-            if (now < hurtCooldowns.get(entityId)) continue;
-            hurtCooldowns.delete(entityId);
-        }
+        // hurt stun check
+        const hurtEnd = hurtCooldowns.get(entityId);
+        if (hurtEnd && currentTick < hurtEnd) continue;
+        if (hurtEnd) hurtCooldowns.delete(entityId);
 
-        // check cooldown
-        const cooldownEnd = jumpCooldowns.get(entityId) || 0;
-        if (now < cooldownEnd) continue;
+        // jump cooldown check
+        const jumpEnd = jumpCooldowns.get(entityId);
+        if (jumpEnd && currentTick < jumpEnd) continue;
 
-        // OPTIMIZATION: Use engine spatial query properly
-        // getEntities with location + maxDistance is much faster than JS math
+        // spatial query for neighbors
         const nearby = overworld.getEntities({
             location: entity.location,
-            maxDistance: 8, // sqr(64) = 8
-            excludeFamilies: ["inanimate", "player", "monster"] // minimal filtering
+            maxDistance: CONFIG.NEARBY_RADIUS,
+            excludeFamilies: ["inanimate", "player", "monster"]
         });
         
-        // Count how many are strictly our passive types (minus self)
-        let nearbyCount = 0;
+        // count passive neighbors
+        let neighborCount = 0;
         for (const n of nearby) {
             if (n.id !== entityId && PASSIVE_MOBS.has(n.typeId)) {
-                nearbyCount++;
+                neighborCount++;
             }
         }
 
-        // base 15% + 10% per neighbor (max 50%)
-        const jumpChance = Math.min(0.15 + nearbyCount * 0.10, 0.50);
+        // jump chance scales with neighbors
+        const jumpChance = Math.min(
+            CONFIG.BASE_JUMP_CHANCE + neighborCount * CONFIG.NEIGHBOR_BONUS,
+            CONFIG.MAX_JUMP_CHANCE
+        );
         if (Math.random() > jumpChance) continue;
 
         // physics check
@@ -68,19 +84,22 @@ function* animalJumpJob() {
             if (Math.abs(vel.y) > 0.1) continue;
             const hSpeed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
             if (hSpeed < 0.01) continue;
-        } catch (e) { continue; }
+        } catch { continue; }
 
-        // execute jump
+        // do the jump
         doJump(entity);
         
-        // set cooldown (10-30s)
-        jumpCooldowns.set(entityId, now + 10000 + Math.random() * 20000);
+        // set cooldown
+        const cooldown = CONFIG.JUMP_COOLDOWN_MIN + 
+            Math.floor(Math.random() * (CONFIG.JUMP_COOLDOWN_MAX - CONFIG.JUMP_COOLDOWN_MIN));
+        jumpCooldowns.set(entityId, currentTick + cooldown);
 
-        yield; // yield execution to next tick/frame to prevent lag
+        yield;
     }
 }
 
 function doJump(entity) {
+    // chickens do single hop, others do 1 to 3
     const jumpCount = entity.typeId === "minecraft:chicken" ? 1 : 1 + Math.floor(Math.random() * 3);
     
     for (let i = 0; i < jumpCount; i++) {
@@ -89,26 +108,24 @@ function doJump(entity) {
                 if (entity.isValid()) {
                     const v = entity.getVelocity();
                     if (Math.abs(v.y) < 0.1) {
-                        entity.applyImpulse({ x: 0, y: 0.42, z: 0 });
+                        entity.applyImpulse({ x: 0, y: CONFIG.JUMP_IMPULSE, z: 0 });
                     }
                 }
-            } catch (e) {}
+            } catch {}
         }, i * 15);
     }
 }
 
 system.runInterval(() => {
     system.runJob(animalJumpJob());
-}, 100); 
+}, CONFIG.CHECK_INTERVAL);
 
-// cleanup dead entities
+// cleanup stale cooldowns
 system.runInterval(() => {
-    // simplified cleanup
-    const now = Date.now();
     for (const [id, time] of jumpCooldowns) {
-        if (time < now) jumpCooldowns.delete(id);
+        if (time < currentTick) jumpCooldowns.delete(id);
     }
     for (const [id, time] of hurtCooldowns) {
-        if (time < now) hurtCooldowns.delete(id);
+        if (time < currentTick) hurtCooldowns.delete(id);
     }
-}, 600);
+}, CONFIG.CLEANUP_INTERVAL);

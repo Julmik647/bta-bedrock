@@ -15,16 +15,9 @@ function* processPlayers() {
         try {
             const isCreative = player.getGameMode() === "creative";
 
-            // no orbs:p
+            // xp removal
             if (player.level > 0 || player.xpEarnedAtCurrentLevel > 0) {
                 player.resetLevel();
-            }
-            
-            if (!isCreative) {
-                const hunger = player.getComponent("minecraft:hunger");
-                if (hunger?.currentValue !== CONFIG.HUNGER_LOCK) {
-                    hunger?.setCurrentValue(CONFIG.HUNGER_LOCK);
-                }
             }
             
             // no offhand

@@ -221,7 +221,7 @@
       },
       "minecraft:navigation.walk": {
         "can_path_over_water": true,
-        "avoid_damage_blocks": true
+        "avoid_damage_blocks": false
       },
       "minecraft:movement.basic": {
       },
