@@ -1,27 +1,15 @@
-/**
- * Enhanced Building Behavior Manager for Minecraft Bedrock
- * API Version: 2.0.0-beta
- * Module Target: ES2023
- * 
- * This module manages various building and interaction behaviors in Minecraft,
- * enforcing specific placement rules and preventing certain interactions.
- */
-
+// placement system for beta 1.7.3 parity
 import { world, Direction, BlockPermutation, system } from '@minecraft/server';
 console.warn("[keirazelle] Placement System Loaded");
 
-/**
- * Configuration constants for block types and tools
- * @constant {Object} BLOCK_CONFIGS
- */
 const BLOCK_CONFIGS = Object.freeze({
-  // Blocks that cannot be placed on ceilings
+  // no ceiling buttons/levers in beta
   CEILING_RESTRICTED: new Set([
     'minecraft:stone_button',
     'minecraft:lever'
   ]),
   
-  // Slabs that should only be placed in bottom position
+  // slabs only bottom half
   BOTTOM_ONLY_SLABS: new Set([
     'minecraft:cobblestone_slab',
     'minecraft:oak_slab',
@@ -29,35 +17,34 @@ const BLOCK_CONFIGS = Object.freeze({
     'minecraft:sandstone_slab',
   ]),
   
-  // Stairs that should only be placed in bottom position
+  // stairs only bottom, no corners
   BOTTOM_ONLY_STAIRS: new Set([
     'minecraft:oak_stairs',
     'minecraft:stone_stairs',
     'minecraft:cobblestone_stairs'
   ]),
   
-  // Logs that should always be placed vertically
+  // logs always vertical
   VERTICAL_ONLY_LOGS: new Set([
     'minecraft:oak_log',
     'minecraft:birch_log',
     'minecraft:spruce_log'
   ]),
   
-  // Logs that can be stripped with axes
+  // no stripping logs
   STRIPPABLE_LOGS: new Set([
     'minecraft:oak_log',
     'minecraft:birch_log',
     'minecraft:spruce_log'
   ]),
   
-  // Tool types
   AXES: new Set([
     'minecraft:wooden_axe',
     'minecraft:stone_axe',
     'minecraft:iron_axe',
     'minecraft:golden_axe',
     'minecraft:diamond_axe',
-    'minecraft:netherite_axe' // Added missing netherite axe
+    'minecraft:netherite_axe'
   ]),
   
   SHOVELS: new Set([
@@ -66,50 +53,36 @@ const BLOCK_CONFIGS = Object.freeze({
     'minecraft:iron_shovel',
     'minecraft:golden_shovel',
     'minecraft:diamond_shovel',
-    'minecraft:netherite_shovel' // Added missing netherite shovel
+    'minecraft:netherite_shovel'
   ]),
   
-  // Blocks that can be turned into paths
+  // no dirt paths in beta
   PATHABLE_BLOCKS: new Set([
     'minecraft:dirt',
     'minecraft:grass_block'
   ]),
   
-  // Items for growth
   BONEMEAL: new Set([
     'minecraft:bone_meal'
   ])
 });
 
-/**
- * Prevents placing certain blocks on ceilings
- * @param {BeforeItemUseOnEvent} event - The interaction event
- */
+// no ceiling placement for buttons/levers
 function preventCeilingPlacement(event) {
   const { itemStack, blockFace } = event;
   
-  // Early exit if condition not met
-  if (!itemStack || !BLOCK_CONFIGS.CEILING_RESTRICTED.has(itemStack.typeId)) {
-    return;
-  }
+  if (!itemStack || !BLOCK_CONFIGS.CEILING_RESTRICTED.has(itemStack.typeId)) return;
   
-  // Cancel if trying to place on ceiling
   if (blockFace === Direction.Down) {
     event.cancel = true;
   }
 }
 
-/**
- * Prevents stripping logs with axes
- * @param {BeforeItemUseOnEvent} event - The interaction event
- */
+// no log stripping
 function preventLogStripping(event) {
   const { itemStack, block } = event;
   
-  // Early exit if either condition not met
-  if (!itemStack || !block) {
-    return;
-  }
+  if (!itemStack || !block) return;
   
   if (BLOCK_CONFIGS.AXES.has(itemStack.typeId) && 
       BLOCK_CONFIGS.STRIPPABLE_LOGS.has(block.typeId)) {
@@ -117,47 +90,23 @@ function preventLogStripping(event) {
   }
 }
 
-/**
- * Prevents creating dirt paths unless there's a block above
- * @param {BeforeItemUseOnEvent} event - The interaction event
- */
+// beta had no dirt paths
 function preventPathCreation(event) {
   const { itemStack, block } = event;
   
-  // Early exit if conditions not met
-  if (!itemStack || !block) {
-    return;
-  }
+  if (!itemStack || !block) return;
   
   if (BLOCK_CONFIGS.SHOVELS.has(itemStack.typeId) && 
       BLOCK_CONFIGS.PATHABLE_BLOCKS.has(block.typeId)) {
-    
-    try {
-      const blockAbove = block.above();
-      // Allow path creation only if there's a non-air block above
-      if (!blockAbove || blockAbove.isAir) {
-        event.cancel = true;
-      }
-    } catch (error) {
-      // Log error but don't crash
-      console.warn(`Error checking block above: ${error.message}`);
-      // Default to preventing path creation on error
-      event.cancel = true;
-    }
+    event.cancel = true;
   }
 }
 
-/**
- * Prevents using bonemeal on short grass and ferns
- * @param {BeforeItemUseOnEvent} event - The interaction event
- */
+// no tall grass from bonemeal on grass
 function preventBonemealOnShortGrass(event) {
   const { itemStack, block } = event;
   
-  // Early exit if conditions not met
-  if (!itemStack || !block) {
-    return;
-  }
+  if (!itemStack || !block) return;
   
   if (BLOCK_CONFIGS.BONEMEAL.has(itemStack.typeId) && 
       (block.typeId === 'minecraft:short_grass' || block.typeId === 'minecraft:fern')) {
@@ -165,59 +114,43 @@ function preventBonemealOnShortGrass(event) {
   }
 }
 
-/**
- * Calculates facing direction based on player's view vector
- * @param {Vector3} viewVector - Player's view direction vector
- * @returns {number} Direction value (0-3)
- */
-function calculateFacingDirection(viewVector) {
-  // Compare absolute values to determine primary direction
+// stairs face player (inverted)
+function calculateStairFacing(viewVector) {
   if (Math.abs(viewVector.x) > Math.abs(viewVector.z)) {
-    return viewVector.x > 0 ? 0 : 1; // East (0) or West (1)
+    return viewVector.x > 0 ? 1 : 0;
   }
-  return viewVector.z > 0 ? 2 : 3; // South (2) or North (3)
+  return viewVector.z > 0 ? 3 : 2;
 }
 
-/**
- * Prevents waterlogging of placed blocks
- * @param {AfterEvents.PlayerPlaceBlockEvent} event - The block placement event
- */
+// no waterlogging
 function preventWaterlogging(event) {
   const { block } = event;
   
   if (!block) return;
   
   try {
-    // Check if the block property exists before accessing
     if (typeof block.isWaterlogged === 'boolean' && block.isWaterlogged) {
       block.setWaterlogged(false);
     }
-  } catch (error) {
-    console.warn(`Failed to prevent waterlogging: ${error.message}`);
-  }
+  } catch (e) {}
 }
 
-/**
- * Handles various block placement rules
- * @param {AfterEvents.PlayerPlaceBlockEvent} event - The block placement event
- */
+// main placement handler
 function handleBlockPlacement(event) {
   const { block, player } = event;
   
   if (!block || !player) return;
 
-  // handle doors - clear water from both halves
+  // doors need both halves cleared of water
   if (block.typeId.includes('_door')) {
     try {
       const dim = block.dimension;
       const loc = block.location;
       const isTop = block.permutation.getState('upper_block_bit');
       
-      // get both halves
       const topLoc = isTop ? loc : { x: loc.x, y: loc.y + 1, z: loc.z };
       const botLoc = isTop ? { x: loc.x, y: loc.y - 1, z: loc.z } : loc;
       
-      // clear water at both locations
       const topBlock = dim.getBlock(topLoc);
       const botBlock = dim.getBlock(botLoc);
       
@@ -230,28 +163,24 @@ function handleBlockPlacement(event) {
     } catch (e) {}
   }
 
-  // waterlogging prevention for other blocks
   preventWaterlogging(event);
 
-  // Handle slabs placement
+  // slabs always bottom
   if (BLOCK_CONFIGS.BOTTOM_ONLY_SLABS.has(block.typeId)) {
     try {
       const permutation = BlockPermutation.resolve(block.typeId, { 
         'minecraft:vertical_half': 'bottom' 
       });
       block.setPermutation(permutation);
-    } catch (error) {
-      console.warn(`Failed to set slab orientation: ${error.message}`);
-    }
+    } catch (e) {}
   }
 
-  // Handle stairs placement - prevent upside-down and corner shapes
+  // stairs always bottom, face player
   if (BLOCK_CONFIGS.BOTTOM_ONLY_STAIRS.has(block.typeId)) {
     try {
       const viewVector = player.getViewDirection();
-      const newDirection = calculateFacingDirection(viewVector);
+      const newDirection = calculateStairFacing(viewVector);
       
-      // force straight shape, no upside-down
       const setStairsStraight = () => {
         try {
           if (!block.isValid()) return;
@@ -260,59 +189,33 @@ function handleBlockPlacement(event) {
             'weirdo_direction': newDirection
           });
           block.setPermutation(permutation);
-        } catch (error) {}
+        } catch (e) {}
       };
       
-      // apply immediately and again after adjacent block updates
+      // apply twice to fight auto updates
       system.runTimeout(setStairsStraight, 1);
       system.runTimeout(setStairsStraight, 3);
-    } catch (error) {
-      console.warn(`Failed to calculate stairs direction: ${error.message}`);
-    }
+    } catch (e) {}
   }
 
-  // Handle log placement
+  // logs always vertical
   if (BLOCK_CONFIGS.VERTICAL_ONLY_LOGS.has(block.typeId)) {
     try {
       const permutation = BlockPermutation.resolve(block.typeId, { 
         'pillar_axis': 'y' 
       });
       block.setPermutation(permutation);
-    } catch (error) {
-      console.warn(`Failed to set log orientation: ${error.message}`);
-    }
+    } catch (e) {}
   }
 }
 
-/**
- * Main initialization function that registers all event handlers
- */
-function initializeBuildingBehaviors() {
-  try {
-    // Register before-events
-    world.beforeEvents.playerInteractWithBlock.subscribe(preventCeilingPlacement);
-    world.beforeEvents.playerInteractWithBlock.subscribe(preventLogStripping);
-    world.beforeEvents.playerInteractWithBlock.subscribe(preventPathCreation);
-    world.beforeEvents.playerInteractWithBlock.subscribe(preventBonemealOnShortGrass);
-    
-    // Register after-events
-    world.afterEvents.playerPlaceBlock.subscribe(handleBlockPlacement);
-    
-    console.info('Building behavior managers initialized successfully');
-  } catch (error) {
-    console.error(`Failed to initialize building behaviors: ${error.message}`);
-  }
+// init
+function init() {
+  world.beforeEvents.playerInteractWithBlock.subscribe(preventCeilingPlacement);
+  world.beforeEvents.playerInteractWithBlock.subscribe(preventLogStripping);
+  world.beforeEvents.playerInteractWithBlock.subscribe(preventPathCreation);
+  world.beforeEvents.playerInteractWithBlock.subscribe(preventBonemealOnShortGrass);
+  world.afterEvents.playerPlaceBlock.subscribe(handleBlockPlacement);
 }
 
-// Initialize the module
-initializeBuildingBehaviors();
-
-// Export functions for potential testing or modular use
-export {
-  preventCeilingPlacement,
-  preventLogStripping,
-  preventPathCreation,
-  preventBonemealOnShortGrass,
-  handleBlockPlacement,
-  BLOCK_CONFIGS
-};
+init();

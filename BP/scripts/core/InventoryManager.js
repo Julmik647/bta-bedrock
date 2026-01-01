@@ -18,7 +18,7 @@ const ALLOWED = Object.freeze(new Set([
     "minecraft:wooden_hoe", "minecraft:stone_hoe", "minecraft:iron_hoe",
     "minecraft:golden_hoe", "minecraft:diamond_hoe",
     "minecraft:flint_and_steel", "minecraft:fishing_rod", "minecraft:shears",
-    "minecraft:compass", "minecraft:clock", "minecraft:bow", "minecraft:arrow",
+    "minecraft:compass", "minecraft:clock", "minecraft:bow", "bh:bow", "minecraft:arrow",
     "minecraft:wooden_sword", "minecraft:stone_sword", "minecraft:iron_sword",
     "minecraft:golden_sword", "minecraft:diamond_sword",
 

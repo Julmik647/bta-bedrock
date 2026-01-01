@@ -14,7 +14,6 @@
 			  },
 			"minecraft:crafting_table": {
 				"crafting_tags": [
-					"crafting_table",
 					"beta_crafting"
 				],
 				"table_name": "Crafting Table"

@@ -1,42 +1,42 @@
+// player loop for beta parity
 import { world, system, EquipmentSlot } from "@minecraft/server";
-console.warn("[keirazelle] Player Loop Loaded");
-const CONFIG = Object.freeze({
-    TICK_INTERVAL: 20
-});
+console.warn("[keirazelle] player loop loaded");
 
-// generator fn to distribute player processing across ticks
-function* processPlayers() {
+// run every 2 ticks for instant response
+system.runInterval(() => {
     const players = world.getPlayers();
-    
+
     for (const player of players) {
+        // safety check
+        if (!player.isValid()) continue;
+
         try {
             // xp removal
             if (player.level > 0 || player.xpEarnedAtCurrentLevel > 0) {
                 player.resetLevel();
             }
-            
-            // offhand disabled, yeet back to inv
+
+            // no offhand in beta
             const equippable = player.getComponent("minecraft:equippable");
-            const offhandItem = equippable?.getEquipment(EquipmentSlot.Offhand);
+            if (!equippable) continue;
+
+            const offhandItem = equippable.getEquipment(EquipmentSlot.Offhand);
+
             if (offhandItem) {
+                // clear slot immediately
+                equippable.setEquipment(EquipmentSlot.Offhand, undefined);
+
                 const inv = player.getComponent("inventory")?.container;
                 if (inv) {
                     const leftover = inv.addItem(offhandItem);
-                    // inv full? drop it
                     if (leftover) {
                         player.dimension.spawnItem(leftover, player.location);
                     }
+                } else {
+                    // no inv? just drop
+                    player.dimension.spawnItem(offhandItem, player.location);
                 }
-                equippable.setEquipment(EquipmentSlot.Offhand, undefined);
             }
-        } catch (e) {
-            console.warn(`[playerLoop] error processing ${player?.name}: ${e}`);
-        }
-        
-        yield;
+        } catch (e) {}
     }
-}
-
-system.runInterval(() => {
-    system.runJob(processPlayers());
-}, CONFIG.TICK_INTERVAL);
+}, 2);
