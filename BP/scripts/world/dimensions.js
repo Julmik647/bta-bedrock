@@ -1,4 +1,3 @@
-// dimension lock: prevent end access (didnt exist in beta 1.7.3)
 import { world } from "@minecraft/server";
 
 console.warn("[keirazelle] Dimension Lock Loaded");

@@ -18,12 +18,12 @@ const PICKAXES = new Set([
 
 const CONFIG = Object.freeze({
     TICK_INTERVAL: 3, // faster check for responsiveness
-    FATIGUE_DURATION: 10, // buffer to prevent flicker
+    FATIGUE_DURATION: 10, // buffer 
     FATIGUE_AMPLIFIER: 1, // fatigue II
     MAX_DISTANCE: 5
 });
 
-// track who has effect (set is cleaner than map)
+// track who has effect 
 const hasFatigue = new Set();
 
 system.runInterval(() => {

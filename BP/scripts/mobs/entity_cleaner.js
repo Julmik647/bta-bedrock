@@ -2,8 +2,8 @@ import { world, system } from "@minecraft/server";
 console.warn("[keirazelle] Entity Cleaner Module Loaded");
 
 const CONFIG = Object.freeze({
-    CHECK_INTERVAL: 20,
-    CHECK_RADIUS: 64
+    CHECK_INTERVAL: 100,
+    CHECK_RADIUS: 32
 });
 
 // mobs that shouldnt exist in beta
