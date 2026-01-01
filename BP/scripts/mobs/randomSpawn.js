@@ -22,6 +22,9 @@ const BAD_BLOCKS = Object.freeze(new Set([
     "minecraft:magma"
 ]));
 
+// race condition lock
+let spawnInProgress = false;
+
 // check if we already set the spawn once
 function isSpawnSet() {
     return world.getDynamicProperty("betafied:spawn_init") === true;
@@ -125,6 +128,13 @@ world.afterEvents.playerSpawn.subscribe((ev) => {
         return;
     }
 
-    // first player finds a spot and sets world spawn
+    // prevent race condition if two players join at once
+    if (spawnInProgress) {
+        player.addTag("spawned");
+        return;
+    }
+
+    // lock and find spawn
+    spawnInProgress = true;
     attemptSpawn(player);
 });

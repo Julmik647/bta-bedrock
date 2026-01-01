@@ -14,6 +14,7 @@ import './gameplay/foodSystem.js';
 import './gameplay/machineGunBow.js';
 import './gameplay/sword.js';
 import './gameplay/swordMining.js';
+import './gameplay/redstoneMining.js';
 import './gameplay/boatBreak.js';
 import './gameplay/instantBonemeal.js';
 import './gameplay/placementSystem.js';

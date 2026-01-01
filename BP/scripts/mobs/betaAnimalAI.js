@@ -4,6 +4,7 @@ console.warn("[keirazelle] Beta Animal AI Loaded");
 const CONFIG = Object.freeze({
     CHECK_INTERVAL: 100,
     CLEANUP_INTERVAL: 600,
+    MAX_MAP_SIZE: 500, // hard cap to prevent memory leak
     HURT_COOLDOWN_TICKS: 160, // 8 seconds
     JUMP_COOLDOWN_MIN: 200,   // 10 seconds
     JUMP_COOLDOWN_MAX: 600,   // 30 seconds
@@ -125,6 +126,10 @@ system.runInterval(() => {
 
 // cleanup stale cooldowns
 system.runInterval(() => {
+    // emergency clear if too big
+    if (jumpCooldowns.size > CONFIG.MAX_MAP_SIZE) jumpCooldowns.clear();
+    if (hurtCooldowns.size > CONFIG.MAX_MAP_SIZE) hurtCooldowns.clear();
+    
     for (const [id, time] of jumpCooldowns) {
         if (time < currentTick) jumpCooldowns.delete(id);
     }

@@ -1,14 +1,16 @@
+// inventory manager for beta 1.7.3 parity
 import { world, system, ItemStack } from "@minecraft/server";
 console.warn("[keirazelle] Inventory Manager Loaded");
 
 const CONFIG = Object.freeze({
     CHECK_INTERVAL: 20,
     MESSAGE_COOLDOWN: 60,
-    REMOVE_MSG: "§c[keirazelle] §7That item doesn't exist in Beta 1.7.3!"
+    REMOVE_MSG: "§c[keirazelle] §7That item doesn't exist in Beta 1.7.3!",
+    ENCHANT_MSG: "§c[keirazelle] §7Enchantments removed! Beta 1.7.3 had no enchanting."
 });
 
 const ALLOWED = Object.freeze(new Set([
-    // tools & weapons
+    // tools n weapons
     "minecraft:wooden_pickaxe", "minecraft:stone_pickaxe", "minecraft:iron_pickaxe",
     "minecraft:golden_pickaxe", "minecraft:diamond_pickaxe",
     "minecraft:wooden_axe", "minecraft:stone_axe", "minecraft:iron_axe",
@@ -29,14 +31,14 @@ const ALLOWED = Object.freeze(new Set([
     "minecraft:golden_helmet", "minecraft:golden_chestplate", "minecraft:golden_leggings", "minecraft:golden_boots",
     "minecraft:diamond_helmet", "minecraft:diamond_chestplate", "minecraft:diamond_leggings", "minecraft:diamond_boots",
 
-    // food (vanilla + custom bh: versions)
+    // food (vanilla + bh versions)
     "minecraft:apple", "minecraft:golden_apple", "minecraft:mushroom_stew", "minecraft:bread",
     "minecraft:porkchop", "minecraft:cooked_porkchop", "minecraft:cod", "minecraft:cooked_cod",
     "minecraft:cookie", "minecraft:cake",
     "bh:apple", "bh:bread", "bh:porkchop", "bh:cooked_porkchop",
     "bh:cod", "bh:cooked_cod", "bh:golden_apple", "bh:cookie",
 
-    // raw materials & dyes
+    // materials n dyes
     "minecraft:coal", "minecraft:charcoal", "minecraft:diamond", "minecraft:iron_ingot", "minecraft:gold_ingot",
     "minecraft:stick", "minecraft:bowl", "minecraft:string", "minecraft:feather", "minecraft:gunpowder",
     "minecraft:wheat_seeds", "minecraft:wheat", "minecraft:flint", "minecraft:leather", "minecraft:brick",
@@ -66,31 +68,32 @@ const ALLOWED = Object.freeze(new Set([
     "minecraft:brick_block", "minecraft:bricks", "minecraft:bookshelf",
     "minecraft:gold_block", "minecraft:iron_block", "minecraft:diamond_block", "minecraft:lapis_block", "minecraft:tnt",
 
-    // redstone & machines
+    // redstone n machines
     "minecraft:redstone_torch", "minecraft:lever", "minecraft:stone_pressure_plate", "minecraft:wooden_pressure_plate",
     "minecraft:stone_button", "minecraft:rail", "minecraft:golden_rail", "minecraft:detector_rail",
     "minecraft:repeater", "minecraft:piston", "minecraft:sticky_piston",
     "minecraft:furnace", "minecraft:crafting_table", "minecraft:chest", "minecraft:jukebox",
     "minecraft:noteblock", "minecraft:dispenser", "minecraft:spawner",
 
-    // deco & transport
+    // deco n transport
     "minecraft:torch", "minecraft:ladder", "minecraft:oak_sign", "minecraft:wooden_door", "minecraft:iron_door",
     "minecraft:trapdoor", "minecraft:painting", "minecraft:bed", "minecraft:white_wool", "minecraft:orange_wool",
     "minecraft:magenta_wool", "minecraft:light_blue_wool", "minecraft:yellow_wool", "minecraft:lime_wool",
     "minecraft:pink_wool", "minecraft:gray_wool", "minecraft:light_gray_wool", "minecraft:cyan_wool",
     "minecraft:purple_wool", "minecraft:blue_wool", "minecraft:brown_wool", "minecraft:green_wool",
     "minecraft:red_wool", "minecraft:black_wool", "minecraft:poppy", "minecraft:dandelion", "minecraft:short_grass",
-    "minecraft:fern", "minecraft:oak_boat", "minecraft:minecart", "minecraft:chest_minecart", "minecraft:furnace_minecart",
+    "minecraft:fern", "minecraft:dead_bush", "minecraft:cobweb",
+    "minecraft:oak_boat", "minecraft:minecart", "minecraft:chest_minecart", "minecraft:furnace_minecart",
     "minecraft:saddle", "minecraft:bucket", "minecraft:water_bucket", "minecraft:lava_bucket", "minecraft:milk_bucket",
-    "minecraft:snowball", "minecraft:filled_map", "minecraft:empty_map", "minecraft:music_disc_13", "minecraft:music_disc_cat",
+    "minecraft:snowball", "minecraft:music_disc_13", "minecraft:music_disc_cat",
     "minecraft:water", "minecraft:lava",
 
-    // custom/meta
+    // custom stuff
     "bh:bow", "bh:crafting_table", "bh:wooden_slab", "hrb:herobrine_settings", "hrb:script_openSettings", "minecraft:barrier"
 ]));
 
 const CONVERSIONS = Object.freeze({
-    // stone variants
+    // stone variants to stone
     "minecraft:andesite": "minecraft:stone",
     "minecraft:granite": "minecraft:stone",
     "minecraft:diorite": "minecraft:stone",
@@ -101,7 +104,7 @@ const CONVERSIONS = Object.freeze({
     "minecraft:smooth_basalt": "minecraft:stone",
     "minecraft:cobbled_deepslate": "minecraft:cobblestone",
 
-    // copper -> cobble
+    // copper to cobble lol
     "minecraft:copper_ingot": "minecraft:cobblestone",
     "minecraft:raw_copper": "minecraft:cobblestone",
     "minecraft:copper_ore": "minecraft:stone",
@@ -118,7 +121,7 @@ const CONVERSIONS = Object.freeze({
     "minecraft:waxed_weathered_copper": "minecraft:cobblestone",
     "minecraft:waxed_oxidized_copper": "minecraft:cobblestone",
 
-    // modern wood -> oak
+    // modern wood to oak
     "minecraft:cherry_log": "minecraft:oak_log",
     "minecraft:mangrove_log": "minecraft:oak_log",
     "minecraft:bamboo_block": "minecraft:oak_log",
@@ -141,7 +144,7 @@ const CONVERSIONS = Object.freeze({
     "minecraft:suspicious_sand": "minecraft:sand",
     "minecraft:suspicious_gravel": "minecraft:gravel",
 
-    // flowers -> poppy
+    // flowers to poppy (rose)
     "minecraft:cornflower": "minecraft:poppy",
     "minecraft:lily_of_the_valley": "minecraft:poppy",
     "minecraft:blue_orchid": "minecraft:poppy",
@@ -161,13 +164,13 @@ const CONVERSIONS = Object.freeze({
     "minecraft:torchflower": "minecraft:poppy",
     "minecraft:pitcher_plant": "minecraft:poppy",
 
-    // flesh -> feathers
+    // flesh to feathers
     "minecraft:rotten_flesh": "minecraft:feather",
 
-    // bow & fence
+    // bow n fence
     "minecraft:bow": "bh:bow",
     
-    // slabs (all wood -> oak style per beta)
+    // slabs all to bh wooden
     "minecraft:oak_slab": "bh:wooden_slab",
     "minecraft:birch_slab": "bh:wooden_slab",
     "minecraft:spruce_slab": "bh:wooden_slab",
@@ -181,7 +184,7 @@ const CONVERSIONS = Object.freeze({
     "minecraft:warped_slab": "bh:wooden_slab",
     "minecraft:pale_oak_slab": "bh:wooden_slab",
 
-    // boats (all -> oak)
+    // boats all to oak
     "minecraft:birch_boat": "minecraft:oak_boat",
     "minecraft:spruce_boat": "minecraft:oak_boat",
     "minecraft:jungle_boat": "minecraft:oak_boat",
@@ -191,7 +194,7 @@ const CONVERSIONS = Object.freeze({
     "minecraft:mangrove_boat": "minecraft:oak_boat",
     "minecraft:bamboo_raft": "minecraft:oak_boat",
 
-    // dyes -> raw materials (beta style)
+    // dyes to raw mats
     "minecraft:white_dye": "minecraft:bone_meal",
     "minecraft:black_dye": "minecraft:ink_sac",
     "minecraft:blue_dye": "minecraft:lapis_lazuli",
@@ -211,6 +214,7 @@ const FOOD_CONVERSIONS = Object.freeze({
     "minecraft:cooked_salmon": "bh:cooked_cod"
 });
 
+// items with no beta equivalent, just yeet em
 const DELETE_ITEMS = Object.freeze(new Set([
     "minecraft:mutton", "minecraft:cooked_mutton",
     "minecraft:rabbit", "minecraft:cooked_rabbit",
@@ -246,43 +250,52 @@ function processInventory(player) {
     if (!inv) return;
 
     let removed = false;
+    let stripped = false;
 
     for (let i = 0; i < inv.size; i++) {
         const item = inv.getItem(i);
         if (!item) continue;
         const id = item.typeId;
 
-        // 1. food conversions - spawn extras as drops instead of loop
+        // food conversions, unstack em
         if (FOOD_CONVERSIONS[id]) {
             const newId = FOOD_CONVERSIONS[id];
             const amount = item.amount;
 
             inv.setItem(i, new ItemStack(newId, 1));
 
-            // spawn rest as ground items (no loop per item)
+            // fill empty slots first, drop the rest
             if (amount > 1) {
-                for (let k = 1; k < amount; k++) {
-                    const added = inv.addItem(new ItemStack(newId, 1));
-                    if (added?.amount > 0) {
-                        player.dimension.spawnItem(added, player.location);
+                let remaining = amount - 1;
+                
+                // quick scan for empty slots
+                for (let s = 0; s < inv.size && remaining > 0; s++) {
+                    if (!inv.getItem(s)) {
+                        inv.setItem(s, new ItemStack(newId, 1));
+                        remaining--;
                     }
+                }
+                
+                // drop any leftovers as single item
+                if (remaining > 0) {
+                    player.dimension.spawnItem(new ItemStack(newId, remaining), player.location);
                 }
             }
             continue;
         }
 
-        // 2. delete items with no equivalent
+        // delete items with no equivalent
         if (DELETE_ITEMS.has(id)) {
             inv.setItem(i, undefined);
             removed = true;
             continue;
         }
 
-        // 3. convert modern -> beta
+        // convert modern to beta
         if (CONVERSIONS[id]) {
             const newItem = new ItemStack(CONVERSIONS[id], item.amount);
             
-            // preserve durability if item has it
+            // keep durability
             const oldDur = item.getComponent("durability");
             const newDur = newItem.getComponent("durability");
             if (oldDur && newDur) {
@@ -293,7 +306,21 @@ function processInventory(player) {
             continue;
         }
 
-        // 4. delete if not in allowed list
+        // strip enchantments (beta had no enchanting)
+        const enchantable = item.getComponent("minecraft:enchantable");
+        if (enchantable?.getEnchantments()?.length > 0) {
+            const cleanItem = new ItemStack(id, item.amount);
+            const oldDur = item.getComponent("durability");
+            const newDur = cleanItem.getComponent("durability");
+            if (oldDur && newDur) {
+                newDur.damage = oldDur.damage;
+            }
+            inv.setItem(i, cleanItem);
+            stripped = true;
+            continue;
+        }
+
+        // not allowed? bye
         if (!ALLOWED.has(id)) {
             inv.setItem(i, undefined);
             removed = true;
@@ -301,19 +328,20 @@ function processInventory(player) {
         }
     }
 
-    if (removed) notifyPlayer(player);
+    if (removed) notifyPlayer(player, CONFIG.REMOVE_MSG);
+    if (stripped) notifyPlayer(player, CONFIG.ENCHANT_MSG);
 }
 
-function notifyPlayer(player) {
+function notifyPlayer(player, msg) {
     const now = system.currentTick;
     const last = msgCooldowns.get(player.id) ?? 0;
     if (now - last >= CONFIG.MESSAGE_COOLDOWN) {
-        player.sendMessage(CONFIG.REMOVE_MSG);
+        player.sendMessage(msg);
         msgCooldowns.set(player.id, now);
     }
 }
 
-// cleanup on leave
+// cleanup
 world.afterEvents.playerLeave.subscribe((ev) => {
     msgCooldowns.delete(ev.playerId);
 });
