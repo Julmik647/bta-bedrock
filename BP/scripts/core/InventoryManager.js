@@ -89,7 +89,7 @@ const ALLOWED = Object.freeze(new Set([
     "minecraft:water", "minecraft:lava",
 
     // custom stuff
-    "bh:bow", "bh:crafting_table", "bh:wooden_slab", "hrb:herobrine_settings", "hrb:script_openSettings", "minecraft:barrier"
+    "bh:bow", "bh:crafting_table", "bh:wooden_slab", "bh:fence", "hrb:herobrine_settings", "hrb:script_openSettings", "minecraft:barrier"
 ]));
 
 const CONVERSIONS = Object.freeze({
@@ -169,6 +169,22 @@ const CONVERSIONS = Object.freeze({
 
     // bow n fence
     "minecraft:bow": "bh:bow",
+    "minecraft:crafting_table": "bh:crafting_table",
+    
+    // all fences to bh:fence
+    "minecraft:oak_fence": "bh:fence",
+    "minecraft:birch_fence": "bh:fence",
+    "minecraft:spruce_fence": "bh:fence",
+    "minecraft:jungle_fence": "bh:fence",
+    "minecraft:acacia_fence": "bh:fence",
+    "minecraft:dark_oak_fence": "bh:fence",
+    "minecraft:cherry_fence": "bh:fence",
+    "minecraft:mangrove_fence": "bh:fence",
+    "minecraft:bamboo_fence": "bh:fence",
+    "minecraft:crimson_fence": "bh:fence",
+    "minecraft:warped_fence": "bh:fence",
+    "minecraft:nether_brick_fence": "bh:fence",
+    "minecraft:pale_oak_fence": "bh:fence",
     
     // slabs all to bh wooden
     "minecraft:oak_slab": "bh:wooden_slab",

@@ -27,6 +27,7 @@ const ALLOWED_MOBS = Object.freeze(new Set([
     "minecraft:wolf",
     "minecraft:zombie",
     "minecraft:zombie_pigman",
+    "minecraft:zombified_piglin",
     "minecraft:lightning_bolt",
     "minecraft:snowball",
     "minecraft:egg",

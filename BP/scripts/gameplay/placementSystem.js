@@ -114,14 +114,6 @@ function preventBonemealOnShortGrass(event) {
   }
 }
 
-// stairs face player (inverted)
-function calculateStairFacing(viewVector) {
-  if (Math.abs(viewVector.x) > Math.abs(viewVector.z)) {
-    return viewVector.x > 0 ? 1 : 0;
-  }
-  return viewVector.z > 0 ? 3 : 2;
-}
-
 // no waterlogging
 function preventWaterlogging(event) {
   const { block } = event;
@@ -141,26 +133,32 @@ function handleBlockPlacement(event) {
   
   if (!block || !player) return;
 
-  // doors need both halves cleared of water
+  // doors need both halves cleared of water (delayed so top half exists)
   if (block.typeId.includes('_door')) {
-    try {
-      const dim = block.dimension;
-      const loc = block.location;
-      const isTop = block.permutation.getState('upper_block_bit');
-      
-      const topLoc = isTop ? loc : { x: loc.x, y: loc.y + 1, z: loc.z };
-      const botLoc = isTop ? { x: loc.x, y: loc.y - 1, z: loc.z } : loc;
-      
-      const topBlock = dim.getBlock(topLoc);
-      const botBlock = dim.getBlock(botLoc);
-      
-      if (topBlock?.typeId === 'minecraft:water' || topBlock?.isWaterlogged) {
+    const dim = block.dimension;
+    const loc = block.location;
+    
+    // delay to let game place both door halves
+    system.runTimeout(() => {
+      try {
+        const botLoc = { x: Math.floor(loc.x), y: Math.floor(loc.y), z: Math.floor(loc.z) };
+        const topLoc = { x: botLoc.x, y: botLoc.y + 1, z: botLoc.z };
+        
+        // clear water at both positions
         dim.runCommand(`setblock ${topLoc.x} ${topLoc.y} ${topLoc.z} air replace water`);
-      }
-      if (botBlock?.typeId === 'minecraft:water' || botBlock?.isWaterlogged) {
         dim.runCommand(`setblock ${botLoc.x} ${botLoc.y} ${botLoc.z} air replace water`);
-      }
-    } catch (e) {}
+        
+        // unwaterlog door blocks
+        const topBlock = dim.getBlock(topLoc);
+        const botBlock = dim.getBlock(botLoc);
+        if (topBlock?.typeId?.includes('_door')) {
+          try { topBlock.setWaterlogged(false); } catch {}
+        }
+        if (botBlock?.typeId?.includes('_door')) {
+          try { botBlock.setWaterlogged(false); } catch {}
+        }
+      } catch {}
+    }, 2);
   }
 
   preventWaterlogging(event);
@@ -175,26 +173,15 @@ function handleBlockPlacement(event) {
     } catch (e) {}
   }
 
-  // stairs always bottom, face player
+  // stairs always bottom (no upside down in beta)
   if (BLOCK_CONFIGS.BOTTOM_ONLY_STAIRS.has(block.typeId)) {
     try {
-      const viewVector = player.getViewDirection();
-      const newDirection = calculateStairFacing(viewVector);
-      
-      const setStairsStraight = () => {
-        try {
-          if (!block.isValid()) return;
-          const permutation = BlockPermutation.resolve(block.typeId, {
-            'upside_down_bit': false,
-            'weirdo_direction': newDirection
-          });
-          block.setPermutation(permutation);
-        } catch (e) {}
-      };
-      
-      // apply twice to fight auto updates
-      system.runTimeout(setStairsStraight, 1);
-      system.runTimeout(setStairsStraight, 3);
+      const currentStates = block.permutation.getAllStates();
+      const permutation = BlockPermutation.resolve(block.typeId, { 
+        ...currentStates,
+        'upside_down_bit': false 
+      });
+      block.setPermutation(permutation);
     } catch (e) {}
   }
 

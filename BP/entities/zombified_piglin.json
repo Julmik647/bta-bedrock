@@ -1,0 +1,120 @@
+{
+  "format_version": "1.16.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "minecraft:zombified_piglin",
+      "is_spawnable": true,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "component_groups": {
+      "beta:armed": {
+        "minecraft:equipment": {
+          "table": "loot_tables/entities/zombie_pigman_gear.json"
+        }
+      },
+      "beta:angry": {
+        "minecraft:angry": {
+          "duration": 25,
+          "broadcast_anger": true,
+          "broadcast_range": 20,
+          "calm_event": {
+            "event": "beta:calm",
+            "target": "self"
+          }
+        }
+      },
+      "beta:calm": {
+        "minecraft:on_target_acquired": {
+          "event": "beta:become_angry",
+          "target": "self"
+        }
+      }
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": ["zombie_pigman", "undead", "monster", "mob"]
+      },
+      "minecraft:nameable": {},
+      "minecraft:breathable": {
+        "total_supply": 15,
+        "suffocate_time": 0,
+        "breathes_water": true
+      },
+      "minecraft:collision_box": {
+        "width": 0.6,
+        "height": 1.9
+      },
+      "minecraft:health": {
+        "value": 20,
+        "max": 20
+      },
+      "minecraft:movement": {
+        "value": 0.23
+      },
+      "minecraft:loot": {
+        "table": "loot_tables/entities/zombie_pigman.json"
+      },
+      "minecraft:attack": {
+        "damage": 5
+      },
+      "minecraft:fire_immune": true,
+      "minecraft:burns_in_daylight": false,
+      "minecraft:navigation.walk": {
+        "is_amphibious": true,
+        "can_pass_doors": true,
+        "avoid_water": true
+      },
+      "minecraft:movement.basic": {},
+      "minecraft:jump.static": {},
+      "minecraft:can_climb": {},
+      "minecraft:behavior.melee_attack": {
+        "priority": 3,
+        "speed_multiplier": 1.5,
+        "track_target": false
+      },
+      "minecraft:behavior.random_stroll": {
+        "priority": 7,
+        "speed_multiplier": 1.0
+      },
+      "minecraft:behavior.look_at_player": {
+        "priority": 8,
+        "look_distance": 6.0
+      },
+      "minecraft:behavior.random_look_around": {
+        "priority": 9
+      },
+      "minecraft:behavior.hurt_by_target": {
+        "priority": 1
+      },
+      "minecraft:physics": {},
+      "minecraft:pushable": {
+        "is_pushable": true,
+        "is_pushable_by_piston": true
+      }
+    },
+    "events": {
+      "minecraft:entity_spawned": {
+        "add": {
+          "component_groups": ["beta:armed", "beta:calm"]
+        }
+      },
+      "beta:become_angry": {
+        "remove": {
+          "component_groups": ["beta:calm"]
+        },
+        "add": {
+          "component_groups": ["beta:angry"]
+        }
+      },
+      "beta:calm": {
+        "remove": {
+          "component_groups": ["beta:angry"]
+        },
+        "add": {
+          "component_groups": ["beta:calm"]
+        }
+      }
+    }
+  }
+}

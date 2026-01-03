@@ -17,7 +17,7 @@
                   {
                     "test": "distance_to_nearest_player",
                     "operator": "<=",
-                    "value": 3
+                    "value": 3.5
                   },
                   {
                     "test": "has_target",
@@ -43,7 +43,7 @@
               "filters": {
                 "test": "distance_to_nearest_player",
                 "operator": ">",
-                "value": 7
+                "value": 4.5
               },
               "event": "beta:cancel_fuse"
             }

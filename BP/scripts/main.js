@@ -1,4 +1,5 @@
 // main.js
+
 console.warn("[keirazelle] Loading Core Systems...");
 
 // core
@@ -28,6 +29,8 @@ import './world/netherIce.js';
 import './world/fogFix.js';
 import './world/island.js';
 import './world/dimensions.js';
+import './world/fenceSystem.js';
+import './world/worldBorder.js';
 
 // mobs
 import './mobs/entitySpawnHandler.js';
