@@ -144,21 +144,31 @@ function handleBlockPlacement(event) {
         const botLoc = { x: Math.floor(loc.x), y: Math.floor(loc.y), z: Math.floor(loc.z) };
         const topLoc = { x: botLoc.x, y: botLoc.y + 1, z: botLoc.z };
         
-        // clear water at both positions
-        dim.runCommand(`setblock ${topLoc.x} ${topLoc.y} ${topLoc.z} air replace water`);
-        dim.runCommand(`setblock ${botLoc.x} ${botLoc.y} ${botLoc.z} air replace water`);
-        
-        // unwaterlog door blocks
+        // unwaterlog door blocks directly
         const topBlock = dim.getBlock(topLoc);
         const botBlock = dim.getBlock(botLoc);
+        
+        // clear top half
         if (topBlock?.typeId?.includes('_door')) {
-          try { topBlock.setWaterlogged(false); } catch {}
+          try { 
+            topBlock.setWaterlogged(false);
+          } catch {
+            // fallback: use fillbiome to clear
+            try { dim.runCommand(`fill ${topLoc.x} ${topLoc.y} ${topLoc.z} ${topLoc.x} ${topLoc.y} ${topLoc.z} air replace water`); } catch {}
+          }
+        } else if (topBlock?.typeId === 'minecraft:water') {
+          // if top is still water, replace it
+          dim.setBlockType(topLoc, 'minecraft:air');
         }
+        
+        // clear bottom half
         if (botBlock?.typeId?.includes('_door')) {
-          try { botBlock.setWaterlogged(false); } catch {}
+          try { 
+            botBlock.setWaterlogged(false);
+          } catch {}
         }
       } catch {}
-    }, 2);
+    }, 3);
   }
 
   preventWaterlogging(event);
