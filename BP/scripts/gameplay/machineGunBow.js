@@ -3,30 +3,27 @@ import { world, system, ItemStack } from "@minecraft/server";
 console.warn("[keirazelle] machine gun bow loaded");
 
 const CONFIG = Object.freeze({
-    FIRE_COOLDOWN: 3
+    FIRE_COOLDOWN: 2, // ticks between shots
+    HOLD_FIRE_RATE: 3 // ticks between shots when holding (mobile)
 });
 
 // cooldown tracker
 const lastFireTime = new Map();
+// hold-to-fire intervals (mobile support)
+const holdIntervals = new Map();
 
-world.afterEvents.itemUse.subscribe((ev) => {
-    const player = ev.source;
-    const item = ev.itemStack;
-    
-    if (item?.typeId !== "bh:bow") return;
-    
+// core firing logic
+function fireArrow(player) {
     const now = system.currentTick;
     const lastFire = lastFireTime.get(player.id) ?? 0;
     
     // cooldown check
-    if (now - lastFire < CONFIG.FIRE_COOLDOWN) return;
+    if (now - lastFire < CONFIG.FIRE_COOLDOWN) return false;
     lastFireTime.set(player.id, now);
     
     const isCreative = player.getGameMode() === "creative";
     const inv = player.getComponent("inventory")?.container;
-    if (!inv) return;
-    
-    const slot = player.selectedSlotIndex;
+    if (!inv) return false;
     
     // survival needs arrows
     if (!isCreative) {
@@ -39,7 +36,7 @@ world.afterEvents.itemUse.subscribe((ev) => {
             }
         }
         
-        if (arrowSlot === -1) return;
+        if (arrowSlot === -1) return false;
         
         // consume arrow
         const arrowItem = inv.getItem(arrowSlot);
@@ -71,30 +68,84 @@ world.afterEvents.itemUse.subscribe((ev) => {
             volume: 0.5,
             pitch: 1.0 + Math.random() * 0.3
         });
-    } catch (e) {}
-    
-    // handle durability
-    if (!isCreative) {
-        const currentItem = inv.getItem(slot);
-        
-        if (currentItem && currentItem.typeId === "bh:bow") {
-            const durability = currentItem.getComponent("minecraft:durability");
-            
-            if (durability) {
-                durability.damage += 1;
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
 
-                if (durability.damage >= durability.maxDurability) {
-                    inv.setItem(slot, undefined);
-                    player.playSound("random.break");
-                } else {
-                    inv.setItem(slot, currentItem);
-                }
+// pc: click spam - fires on each use
+world.afterEvents.itemUse.subscribe((ev) => {
+    const player = ev.source;
+    const item = ev.itemStack;
+    
+    if (item?.typeId !== "bh:bow") return;
+    fireArrow(player);
+});
+
+// mobile: hold to spam - starts interval on hold
+world.afterEvents.itemStartUse.subscribe((ev) => {
+    const player = ev.source;
+    const item = ev.itemStack;
+    
+    if (item?.typeId !== "bh:bow") return;
+    
+    // clear existing interval if any
+    if (holdIntervals.has(player.id)) {
+        system.clearRun(holdIntervals.get(player.id));
+    }
+    
+    // start firing interval
+    const intervalId = system.runInterval(() => {
+        try {
+            if (!player.isValid()) {
+                system.clearRun(intervalId);
+                holdIntervals.delete(player.id);
+                return;
             }
+            
+            // check if still holding bow
+            const currentItem = player.getComponent("inventory")?.container?.getItem(player.selectedSlotIndex);
+            if (currentItem?.typeId !== "bh:bow") {
+                system.clearRun(intervalId);
+                holdIntervals.delete(player.id);
+                return;
+            }
+            
+            fireArrow(player);
+        } catch (e) {
+            system.clearRun(intervalId);
+            holdIntervals.delete(player.id);
         }
+    }, CONFIG.HOLD_FIRE_RATE);
+    
+    holdIntervals.set(player.id, intervalId);
+});
+
+// stop hold-to-fire when released
+world.afterEvents.itemStopUse.subscribe((ev) => {
+    const player = ev.source;
+    
+    if (holdIntervals.has(player.id)) {
+        system.clearRun(holdIntervals.get(player.id));
+        holdIntervals.delete(player.id);
     }
 });
 
-// cleanup
+world.afterEvents.itemReleaseUse.subscribe((ev) => {
+    const player = ev.source;
+    
+    if (holdIntervals.has(player.id)) {
+        system.clearRun(holdIntervals.get(player.id));
+        holdIntervals.delete(player.id);
+    }
+});
+
+// cleanup on leave
 world.afterEvents.playerLeave.subscribe((ev) => {
     lastFireTime.delete(ev.playerId);
+    if (holdIntervals.has(ev.playerId)) {
+        system.clearRun(holdIntervals.get(ev.playerId));
+        holdIntervals.delete(ev.playerId);
+    }
 });
