@@ -3,7 +3,7 @@ import { world, system, ItemStack } from "@minecraft/server";
 console.warn("[keirazelle] Inventory Manager Loaded");
 
 const CONFIG = Object.freeze({
-    CHECK_INTERVAL: 20,
+    CHECK_INTERVAL: 5,  // faster checks to prevent placement exploit
     MESSAGE_COOLDOWN: 60,
     REMOVE_MSG: "§c[Betafied] §7That item doesn't exist in Beta 1.7.3!",
     ENCHANT_MSG: "§c[Betafied] §7Enchantments removed! Beta 1.7.3 had no enchanting."
