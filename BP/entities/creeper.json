@@ -13,9 +13,17 @@
           "triggers": [
             {
               "filters": {
-                "test": "distance_to_nearest_player",
-                "operator": "<=",
-                "value": 3
+                "all_of": [
+                  {
+                    "test": "distance_to_nearest_player",
+                    "operator": "<=",
+                    "value": 3.5
+                  },
+                  {
+                    "test": "has_target",
+                    "value": true
+                  }
+                ]
               },
               "event": "beta:start_fuse"
             }
@@ -28,6 +36,18 @@
           "fuse_lit": true,
           "power": 3,
           "causes_fire": false
+        },
+        "minecraft:environment_sensor": {
+          "triggers": [
+            {
+              "filters": {
+                "test": "distance_to_nearest_player",
+                "operator": ">",
+                "value": 4.5
+              },
+              "event": "beta:cancel_fuse"
+            }
+          ]
         }
       },
       "minecraft:creeper_forced_explode": {
@@ -41,12 +61,15 @@
     },
     "components": {
       "minecraft:type_family": {
-        "family": [
-          "creeper",
-          "monster",
-          "mob"
-        ]
+        "family": ["creeper", "monster", "mob"]
       },
+      "minecraft:behavior.melee_attack": {
+        "priority": 1,
+        "speed_multiplier": 1.0,
+        "track_target": true,
+        "require_complete_path": false
+      },
+
       "minecraft:breathable": {
         "total_supply": 15,
         "suffocate_time": 0
@@ -71,12 +94,11 @@
         ]
       },
       "minecraft:movement": {
-        "value": 0.25
+        "value": 0.2
       },
       "minecraft:navigation.walk": {
         "is_amphibious": false,
         "avoid_sun": false,
-        "pass_wanted": false,
         "can_path_over_water": false
       },
       "minecraft:movement.basic": {},
@@ -85,15 +107,6 @@
       "minecraft:collision_box": {
         "width": 0.6,
         "height": 1.8
-      },
-      "minecraft:attack": {
-        "damage": 0
-      },
-      "minecraft:behavior.melee_attack": {
-        "priority": 1,
-        "speed_multiplier": 1.0,
-        "track_target": true,
-        "reach_multiplier": 0.0
       },
       "minecraft:behavior.nearest_attackable_target": {
         "priority": 1,
@@ -140,21 +153,23 @@
     "events": {
       "minecraft:entity_spawned": {
         "add": {
-          "component_groups": [
-            "beta:idle"
-          ]
+          "component_groups": ["beta:idle"]
         }
       },
       "beta:start_fuse": {
         "remove": {
-          "component_groups": [
-            "beta:idle"
-          ]
+          "component_groups": ["beta:idle"]
         },
         "add": {
-          "component_groups": [
-            "beta:fusing"
-          ]
+          "component_groups": ["beta:fusing"]
+        }
+      },
+      "beta:cancel_fuse": {
+        "remove": {
+          "component_groups": ["beta:fusing"]
+        },
+        "add": {
+          "component_groups": ["beta:idle"]
         }
       }
     }

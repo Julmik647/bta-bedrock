@@ -1,146 +1,90 @@
 import { world, system, EquipmentSlot } from '@minecraft/server';
-console.warn("[keirazelle] Beta Armor System Loaded");
+
+console.warn("[keirazelle] armor system init");
 
 const CONFIG = Object.freeze({
-    UI_TITLE_STAY: 40,
-    BETA_DURABILITY_PENALTY: true,
-    DEBUG: true
+    debug: false,
+    reduction_per_point: 0.04,
+    max_reduction: 0.80
 });
 
-const BETA_STATS = Object.freeze({
-    'minecraft:leather_helmet': 1,
-    'minecraft:leather_chestplate': 3,
-    'minecraft:leather_leggings': 2,
-    'minecraft:leather_boots': 1,
-    'minecraft:golden_helmet': 2,
-    'minecraft:golden_chestplate': 5,
-    'minecraft:golden_leggings': 3,
-    'minecraft:golden_boots': 1,
-    'minecraft:chainmail_helmet': 2,
-    'minecraft:chainmail_chestplate': 5,
-    'minecraft:chainmail_leggings': 4,
-    'minecraft:chainmail_boots': 1,
-    'minecraft:iron_helmet': 2,
-    'minecraft:iron_chestplate': 6,
-    'minecraft:iron_leggings': 5,
-    'minecraft:iron_boots': 2,
-    'minecraft:diamond_helmet': 3,
-    'minecraft:diamond_chestplate': 8,
-    'minecraft:diamond_leggings': 6,
-    'minecraft:diamond_boots': 3
+const ARMOR_TABLE = Object.freeze({
+    'minecraft:leather_helmet': 1, 'minecraft:leather_chestplate': 3,
+    'minecraft:leather_leggings': 2, 'minecraft:leather_boots': 1,
+    'minecraft:golden_helmet': 2, 'minecraft:golden_chestplate': 5,
+    'minecraft:golden_leggings': 3, 'minecraft:golden_boots': 1,
+    'minecraft:chainmail_helmet': 2, 'minecraft:chainmail_chestplate': 5,
+    'minecraft:chainmail_leggings': 4, 'minecraft:chainmail_boots': 1,
+    'minecraft:iron_helmet': 2, 'minecraft:iron_chestplate': 6,
+    'minecraft:iron_leggings': 5, 'minecraft:iron_boots': 2,
+    'minecraft:diamond_helmet': 3, 'minecraft:diamond_chestplate': 8,
+    'minecraft:diamond_leggings': 6, 'minecraft:diamond_boots': 3,
 });
 
-const IGNORE_ARMOR_SOURCES = Object.freeze(new Set([
-    'fall', 'fire', 'lava', 'drowning', 'suffocation', 'void', 'starvation', 'magic', 'wither'
+const BYPASS_SOURCES = Object.freeze(new Set([
+    'fall', 'fire', 'fireTick', 'lava', 'drowning', 'suffocation', 
+    'void', 'starvation', 'magic', 'wither', 'starve', 'flyIntoWall'
 ]));
 
-class BetaArmorSystem {
-    constructor() {
-        system.runInterval(() => {
-            system.runJob(this.updateUIGenerator());
-        }, 60);
+const SLOTS = Object.freeze([
+    EquipmentSlot.Head, 
+    EquipmentSlot.Chest, 
+    EquipmentSlot.Legs, 
+    EquipmentSlot.Feet
+]);
 
-        world.afterEvents.entityHurt.subscribe((ev) => {
-            this.onHurt(ev);
-            if (ev.hurtEntity.typeId === 'minecraft:player') {
-                this.updateSinglePlayer(ev.hurtEntity);
-            }
-        });
-    }
+function getEffectiveArmorPoints(player) {
+    const equip = player.getComponent('minecraft:equippable');
+    if (!equip) return 0;
 
-    calculatePoints(player) {
-        const equippable = player.getComponent('minecraft:equippable');
-        if (!equippable) return 0;
+    let points = 0;
 
-        let totalPoints = 0;
-        const slots = [EquipmentSlot.Head, EquipmentSlot.Chest, EquipmentSlot.Legs, EquipmentSlot.Feet];
+    // tight loop, barely needs runJob unless we scale to 100 players
+    for (const slot of SLOTS) {
+        const item = equip.getEquipment(slot);
+        if (!item) continue;
+        
+        const base = ARMOR_TABLE[item.typeId];
+        if (!base) continue;
 
-        for (const slot of slots) {
-            const item = equippable.getEquipment(slot);
-            if (!item) continue;
-
-            if (CONFIG.DEBUG) {
-                console.log(`[ARMOR] Slot ${slot}: ${item.typeId}`);
-            }
-
-            if (!BETA_STATS[item.typeId]) continue;
-
-            const basePoints = BETA_STATS[item.typeId];
-            let factor = 1.0;
-
-            if (CONFIG.BETA_DURABILITY_PENALTY) {
-                const durability = item.getComponent('minecraft:durability');
-                if (durability?.maxDurability > 0) {
-                    factor = (durability.maxDurability - durability.damage) / durability.maxDurability;
-                }
-            }
-
-            totalPoints += (basePoints * factor);
-        }
-
-        return totalPoints;
-    }
-
-    // generator for multi-player UI updates
-    *updateUIGenerator() {
-        const players = world.getPlayers();
-
-        for (const player of players) {
-            try {
-                this.updateSinglePlayer(player);
-            } catch (e) {
-                console.error(`[ARMOR] Error: ${e}`);
-            }
-            yield;
+        // check durability penalty
+        const dur = item.getComponent('minecraft:durability');
+        if (dur && dur.maxDurability > 0) {
+            // linear degradation: simple multiplier
+            const ratio = (dur.maxDurability - dur.damage) / dur.maxDurability;
+            points += (base * ratio);
+        } else {
+            points += base;
         }
     }
-
-    updateSinglePlayer(player) {
-        const rawPoints = this.calculatePoints(player);
-
-        const lastPoints = player.lastArmorPoints ?? -1;
-        const lastUpdateTime = player.lastArmorUpdate ?? 0;
-        const currentTime = system.currentTick;
-
-        if (rawPoints !== lastPoints || (currentTime - lastUpdateTime) > 100) {
-            let displayPoints = Math.round(rawPoints);
-
-            if (rawPoints > 0 && displayPoints === 0) displayPoints = 1;
-
-            const spriteId = displayPoints.toString().padStart(2, '0');
-            const hudText = `_a${spriteId}`;
-
-            player.onScreenDisplay.setTitle(hudText, {
-                fadeInDuration: 0,
-                fadeOutDuration: 0,
-                stayDuration: 200
-            });
-
-            player.lastArmorPoints = rawPoints;
-            player.lastArmorUpdate = currentTime;
-
-            if (CONFIG.DEBUG && rawPoints !== lastPoints) {
-                console.warn(`[ARMOR] Updated ${player.name} to ${hudText}`);
-            }
-        }
-    }
-
-    onHurt(event) {
-        const { hurtEntity, damage, damageSource } = event;
-        if (hurtEntity.typeId !== 'minecraft:player') return;
-
-        if (IGNORE_ARMOR_SOURCES.has(damageSource.cause)) return;
-
-        const betaPoints = Math.floor(this.calculatePoints(hurtEntity));
-
-        const betaFactor = (25 - betaPoints) / 25;
-        const targetDamage = damage * betaFactor;
-
-        if (betaPoints < 5) {
-            // chip damage placeholder
-        }
-    }
+    return points;
 }
 
-const betaArmor = new BetaArmorSystem();
-export default betaArmor;
+world.afterEvents.entityHurt.subscribe((ev) => {
+    // fast exit
+    const { hurtEntity: player, damage, damageSource } = ev;
+    if (player.typeId !== 'minecraft:player') return;
+    if (BYPASS_SOURCES.has(damageSource.cause)) return;
+
+    // calc routine
+    const points = getEffectiveArmorPoints(player);
+    if (points <= 0.1) return; // float tolerance
+
+    // logic: heal back the damage that armor 'blocked'
+    // scuffed but efficient for bedrock api limits
+    const reduction = Math.min(points * CONFIG.reduction_per_point, CONFIG.max_reduction);
+    const blockedDamage = damage * reduction;
+
+    if (blockedDamage > 0) {
+        const health = player.getComponent('minecraft:health');
+        if (!health || health.currentValue <= 0) return; // dead men tell no tales
+
+        // apply heal
+        const newHp = Math.min(health.currentValue + blockedDamage, health.effectiveMax);
+        health.setCurrentValue(newHp);
+
+        if (CONFIG.debug) {
+            console.warn(`[armor] took ${damage}, blocked ${blockedDamage}, hp ${health.currentValue} -> ${newHp}`);
+        }
+    }
+});

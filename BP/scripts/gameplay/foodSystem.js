@@ -15,12 +15,12 @@ const FOOD_ITEMS = Object.freeze({
   "minecraft:mushroom_stew": { health: 10, returnContainer: "minecraft:bowl" }
 });
 
-const CAKE_CONFIG = {
+const CAKE_CONFIG = Object.freeze({
   blockId: "minecraft:cake",
   healthRestore: 3,
   maxBites: 6,
   stateProperty: "bite_counter"
-};
+});
 
 class FoodSystem {
   constructor() {
@@ -112,10 +112,8 @@ class FoodSystem {
       ? new ItemStack(item.typeId, newAmount) 
       : undefined);
     
-    // return bowl if needed
+    // return bowl if stew consumed
     if (foodData.returnContainer && newAmount <= 0) {
-      this.tryAddItemToInventory(inventory, new ItemStack(foodData.returnContainer, 1));
-    } else if (foodData.returnContainer && !inventory.isFull()) {
       this.tryAddItemToInventory(inventory, new ItemStack(foodData.returnContainer, 1));
     }
   }

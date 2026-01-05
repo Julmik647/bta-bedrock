@@ -1,3 +1,4 @@
 - Main Developer: Keirazelle (xzelleiv)
-- Former Maintainer(s): Merb, Notchyves
+- Contributors: Merb, Arxance
+- Former Maintainer: Notchyves
 - https://betafied.tech

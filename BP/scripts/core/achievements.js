@@ -103,12 +103,9 @@ class AchievementSystem {
             }
         });
 
-        // inventory polling - 100 tick interval is fine for direct loop
+        // inventory polling with runJob
         system.runInterval(() => {
-            for (const player of world.getPlayers()) {
-                this.checkInventory(player);
-                this.checkRiding(player);
-            }
+            system.runJob(this.checkAllPlayers());
         }, 100);
 
         // monster hunter
@@ -140,6 +137,17 @@ class AchievementSystem {
                 }
             }
         });
+    }
+
+    // generator for player checks
+    *checkAllPlayers() {
+        for (const player of world.getPlayers()) {
+            try {
+                this.checkInventory(player);
+                this.checkRiding(player);
+            } catch (e) {}
+            yield;
+        }
     }
 
     checkRiding(player) {
@@ -184,9 +192,10 @@ class AchievementSystem {
             if (id.includes("stone_pickaxe") || id.includes("iron_pickaxe") ||
                 id.includes("golden_pickaxe") || id.includes("diamond_pickaxe")) hasStonePick = true;
             if (id === "minecraft:leather") hasLeather = true;
-            if (id === "minecraft:bread") hasBread = true;
+            // check both vanilla and bh versions (invmanager converts)
+            if (id === "minecraft:bread" || id === "bh:bread") hasBread = true;
             if (id === "minecraft:cake") hasCake = true;
-            if (id === "minecraft:cooked_cod" || id === "minecraft:cooked_salmon") hasFish = true;
+            if (id === "minecraft:cooked_cod" || id === "bh:cooked_cod") hasFish = true;
             if (id === "minecraft:furnace") hasFurnace = true;
             if (id === "minecraft:iron_ingot") hasIron = true;
         }

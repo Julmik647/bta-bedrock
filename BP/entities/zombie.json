@@ -25,8 +25,8 @@
       "minecraft:burns_in_daylight": {},
       "minecraft:navigation.walk": {
         "can_path_over_water": false,
-        "avoid_water": true,
-        "avoid_damage_blocks": true,
+        "avoid_water": false,
+        "avoid_damage_blocks": false,
         "is_amphibious": false
       },
       "minecraft:jump.static": {},
@@ -66,8 +66,7 @@
       },
       "minecraft:behavior.melee_box_attack": {
         "can_spread_on_fire": true,
-        "priority": 3,
-        "reach_multiplier": 0.8
+        "priority": 3
       },
       "minecraft:movement": {
         "value": 0.25

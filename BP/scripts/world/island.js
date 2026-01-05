@@ -1,66 +1,77 @@
+// island trap for voided players - placed in the end
 import { world, system } from "@minecraft/server";
-console.warn("[keirazelle] Island Gen Loaded");
+console.warn("[keirazelle] island loaded");
 
-// Prison Island Logic
-// Structure: mystructure:island at 300, 60, 300
-// Radius: 100 blocks
-// Effect: Resistance 15 (Invincible)
-// Escape prevention: Voided players strictly teleported back. If no island, loop.
+const CONFIG = Object.freeze({
+    CHECK_INTERVAL: 10,
+    DIMENSION: "the_end",
+    FINAL_POS: { x: 400, y: 80, z: 400 },
+    STRUCTURE_POS: { x: 396, y: 76, z: 396 },
+    STRUCTURE_NAME: "mystructure:island",
+    MAX_RADIUS_SQR: 10000,
+    MIN_Y: 40,
+    RESISTANCE_DURATION: 999999,
+    RESISTANCE_AMP: 255
+});
 
-const ISLAND_CENTER = { x: 300, y: 60, z: 300 };
-const SPAWN_POINT = { x: 300, y: 65, z: 300 }; // Slightly above structure origin
-const MAX_RADIUS_SQR = 100 * 100;
-const STRUCTURE_NAME = "mystructure:island";
+// check if structure already placed
+function isIslandPlaced() {
+    return world.getDynamicProperty("betafied:island_placed") === true;
+}
+
+// place island structure in the end
+function placeIsland() {
+    if (isIslandPlaced()) return;
+    
+    try {
+        const end = world.getDimension(CONFIG.DIMENSION);
+        end.runCommand(`structure load ${CONFIG.STRUCTURE_NAME} ${CONFIG.STRUCTURE_POS.x} ${CONFIG.STRUCTURE_POS.y} ${CONFIG.STRUCTURE_POS.z}`);
+        world.setDynamicProperty("betafied:island_placed", true);
+        console.warn("[island] structure placed in the end");
+    } catch (e) {
+        console.warn(`[island] failed to place structure: ${e}`);
+    }
+}
 
 system.runInterval(() => {
-    try {
-        for (const player of world.getPlayers()) {
-            if (!player.hasTag("voided")) continue;
-
-            const dim = player.dimension;
-            const loc = player.location;
-
-            // 1. Invincibility (Resistance 255/15)
-            // Resistance 5 = 100% damage reduction basically.
-            player.addEffect("resistance", 100, {
-                amplifier: 20,
-                showParticles: false
-            });
-            player.addEffect("saturation", 100, {
-                amplifier: 20,
-                showParticles: false
-            });
-
-            // 2. Check Distance/Radius
-            const dx = loc.x - ISLAND_CENTER.x;
-            const dz = loc.z - ISLAND_CENTER.z;
-            const distSqr = dx * dx + dz * dz;
-
-            // 3. Check Y limit (falling off)
-            const belowY = loc.y < 50; 
-
-            // 4. Dimensional Check (Must be in Overworld or wherever island is)
-            // Assuming Overworld for now unless specified.
-            // If they manage to change dimension, pull them back.
-            // Actually, let's assume valid dimension is whatever dim player is in? 
-            // Or strictly Overworld? 300,60,300 usually implies Overworld.
-            
-            let shouldTeleport = false;
-
-            if (distSqr > MAX_RADIUS_SQR || belowY) {
-                shouldTeleport = true;
-            }
-
-            if (shouldTeleport) {
-                // Force Teleport back to center
-                player.teleport(SPAWN_POINT, { dimension: world.getDimension("overworld") });
-                
-                // If structure doesn't exist, they are just stuck in loop falling/tp'ing
-                // User said: "if someone deletes it, other voided players will forever be stuck in a endless teleportation loop"
-                // This logic fulfills that. If the blocks are gone, they TP to air, fall, TP to air...
-            }
+    for (const player of world.getPlayers()) {
+        if (!player.isValid()) continue;
+        
+        // if tag removed, clear resistance and skip
+        if (!player.hasTag("voided")) {
+            try {
+                player.removeEffect("resistance");
+            } catch {}
+            continue;
         }
-    } catch (e) {
-        console.warn(`Island Script Error: ${e}`);
+        
+        // place island on first voided player
+        if (!isIslandPlaced()) {
+            placeIsland();
+        }
+        
+        const end = world.getDimension(CONFIG.DIMENSION);
+        
+        // tp to end if not already there
+        if (player.dimension.id !== `minecraft:${CONFIG.DIMENSION}`) {
+            player.teleport(CONFIG.FINAL_POS, { dimension: end });
+        }
+        
+        try {
+            // keep resistance maxed out forever
+            player.addEffect("resistance", CONFIG.RESISTANCE_DURATION, { 
+                amplifier: CONFIG.RESISTANCE_AMP, 
+                showParticles: false 
+            });
+
+            const loc = player.location;
+            const dx = loc.x - CONFIG.FINAL_POS.x;
+            const dz = loc.z - CONFIG.FINAL_POS.z;
+            
+            // escaped? yeet back
+            if (dx*dx + dz*dz > CONFIG.MAX_RADIUS_SQR || loc.y < CONFIG.MIN_Y) {
+                player.teleport(CONFIG.FINAL_POS, { dimension: end });
+            }
+        } catch {}
     }
-}, 20); // 1 second is fine - voided players cant escape
+}, CONFIG.CHECK_INTERVAL);

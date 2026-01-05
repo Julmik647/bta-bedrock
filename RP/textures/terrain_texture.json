@@ -284,6 +284,28 @@
         "azalea_leaf_litter": { "textures": "textures/blocks/invisible" },
         "flowering_azalea_leaf_litter": { "textures": "textures/blocks/invisible" },
         
-        "glass_blue": { "textures": "textures/blocks/glass_blue" }
+        "glass_blue": { "textures": "textures/blocks/glass_blue" },
+        
+        "magma": { "textures": "textures/blocks/netherrack" },
+        "crimson_nylium_side": { "textures": "textures/blocks/netherrack" },
+        "crimson_nylium_top": { "textures": "textures/blocks/netherrack" },
+        "warped_nylium_side": { "textures": "textures/blocks/netherrack" },
+        "warped_nylium_top": { "textures": "textures/blocks/netherrack" },
+        "nether_wart_block": { "textures": "textures/blocks/netherrack" },
+        "warped_wart_block": { "textures": "textures/blocks/netherrack" },
+        "shroomlight": { "textures": "textures/blocks/netherrack" },
+        "basalt_side": { "textures": "textures/blocks/netherrack" },
+        "basalt_top": { "textures": "textures/blocks/netherrack" },
+        "polished_basalt_side": { "textures": "textures/blocks/netherrack" },
+        "polished_basalt_top": { "textures": "textures/blocks/netherrack" },
+        "blackstone": { "textures": "textures/blocks/netherrack" },
+        "blackstone_top": { "textures": "textures/blocks/netherrack" },
+        "gilded_blackstone": { "textures": "textures/blocks/netherrack" },
+        "soul_soil": { "textures": "textures/blocks/soul_sand" },
+        "crying_obsidian": { "textures": "textures/blocks/obsidian" },
+        "ancient_debris_side": { "textures": "textures/blocks/netherrack" },
+        "ancient_debris_top": { "textures": "textures/blocks/netherrack" },
+        "nether_gold_ore": { "textures": "textures/blocks/netherrack" },
+        "quartz_ore": { "textures": "textures/blocks/netherrack" }
     }
 }

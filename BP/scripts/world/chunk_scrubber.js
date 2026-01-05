@@ -150,7 +150,9 @@ const FINE_REPLACEMENTS = {
     "minecraft:bubble_coral_fan": "minecraft:water",
     "minecraft:fire_coral_fan": "minecraft:water",
     "minecraft:horn_coral_fan": "minecraft:water",
-    "minecraft:tube_coral_fan": "minecraft:water"
+    "minecraft:tube_coral_fan": "minecraft:water",
+    "minecraft:bee_nest": "minecraft:air",
+    "minecraft:beehive": "minecraft:air"
 };
 
 const PERM_CACHE = new Map();
@@ -163,11 +165,12 @@ function getPermutation(typeId) {
     } catch (e) { return null; }
 }
 
-system.runInterval(() => {
+// chunk scanning generator
+function* chunkScanJob() {
     let chunksProcessed = 0;
 
     for (const player of world.getPlayers()) {
-        if (chunksProcessed >= CHUNKS_PER_TICK_LIMIT) break;
+        if (chunksProcessed >= CHUNKS_PER_TICK_LIMIT) return;
 
         const dim = player.dimension;
         const { x: px, z: pz } = player.location;
@@ -176,7 +179,7 @@ system.runInterval(() => {
 
         // scan 3x3
         for (let dx = -1; dx <= 1; dx++) {
-            if (chunksProcessed >= CHUNKS_PER_TICK_LIMIT) break;
+            if (chunksProcessed >= CHUNKS_PER_TICK_LIMIT) return;
 
             for (let dz = -1; dz <= 1; dz++) {
                 const chunkX = cx + dx;
@@ -195,8 +198,13 @@ system.runInterval(() => {
                 chunksProcessed++;
             }
         }
+        yield;
     }
-}, 3); // every 3 ticks - balance between speed and TPS
+}
+
+system.runInterval(() => {
+    system.runJob(chunkScanJob());
+}, 3); // every 3 ticks
 
 function runBulkCommands(dim, cx, cz) {
     const x1 = cx * 16;

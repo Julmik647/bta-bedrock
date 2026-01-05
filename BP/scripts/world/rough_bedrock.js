@@ -1,4 +1,4 @@
-import { world, system, BlockPermutation, GameMode } from "@minecraft/server";
+/* import { world, system, BlockPermutation, GameMode } from "@minecraft/server";
 
 console.warn("[keirazelle] Rough Bedrock Module Loaded");
 
@@ -75,3 +75,4 @@ world.beforeEvents.itemUseOn.subscribe((event) => {
     const { block } = event;
     if (block.y < 0) event.cancel = true;
 });
+*/ // commented out for now

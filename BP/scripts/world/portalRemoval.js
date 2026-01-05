@@ -2,11 +2,10 @@
 import { world, system } from "@minecraft/server";
 console.warn("[keirazelle] Portal Removal System Loaded");
 
-const RUINED_PORTAL_BLOCKS = new Set([
+const RUINED_PORTAL_BLOCKS = Object.freeze(new Set([
     "minecraft:crying_obsidian",
-    "minecraft:netherrack",
     "minecraft:magma"
-]);
+]));
 
 // staggered generator for performance
 function* scanAroundPlayer(player) {
@@ -39,9 +38,14 @@ function* scanAroundPlayer(player) {
     }
 }
 
+// generator for player scans
+function* portalScanJob() {
+    for (const player of world.getPlayers()) {
+        yield* scanAroundPlayer(player);
+    }
+}
+
 // run scan as background job every 10 seconds
 system.runInterval(() => {
-    for (const player of world.getPlayers()) {
-        system.runJob(scanAroundPlayer(player));
-    }
+    system.runJob(portalScanJob());
 }, 300); 

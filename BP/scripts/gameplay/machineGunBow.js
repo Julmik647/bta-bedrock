@@ -1,61 +1,151 @@
-import { world } from "@minecraft/server";
+import { world, system, ItemStack } from "@minecraft/server";
 
-console.warn("[keirazelle] bow loaded");
+console.warn("[keirazelle] machine gun bow loaded");
 
-world.afterEvents.itemCompleteUse.subscribe(({ source: player, itemStack: item }) => {
+const CONFIG = Object.freeze({
+    FIRE_COOLDOWN: 2, // ticks between shots
+    HOLD_FIRE_RATE: 3 // ticks between shots when holding (mobile)
+});
+
+// cooldown tracker
+const lastFireTime = new Map();
+// hold-to-fire intervals (mobile support)
+const holdIntervals = new Map();
+
+// core firing logic
+function fireArrow(player) {
+    const now = system.currentTick;
+    const lastFire = lastFireTime.get(player.id) ?? 0;
     
-    // check id
-    if (item?.typeId !== "bh:bow") return;
-
-    // creative check
+    // cooldown check
+    if (now - lastFire < CONFIG.FIRE_COOLDOWN) return false;
+    lastFireTime.set(player.id, now);
+    
     const isCreative = player.getGameMode() === "creative";
+    const inv = player.getComponent("inventory")?.container;
+    if (!inv) return false;
     
-    // surv ammo check
+    // survival needs arrows
     if (!isCreative) {
-        const inv = player.getComponent("inventory")?.container;
-        if (!inv) return;
-
-        let hasArrow = false;
+        let arrowSlot = -1;
         for (let i = 0; i < inv.size; i++) {
             const slotItem = inv.getItem(i);
             if (slotItem?.typeId === "minecraft:arrow") {
-                if (slotItem.amount > 1) {
-                    slotItem.amount--;
-                    inv.setItem(i, slotItem);
-                } else {
-                    inv.setItem(i, undefined);
-                }
-                hasArrow = true;
+                arrowSlot = i;
                 break;
             }
         }
-        if (!hasArrow) return;
+        
+        if (arrowSlot === -1) return false;
+        
+        // consume arrow
+        const arrowItem = inv.getItem(arrowSlot);
+        if (arrowItem.amount > 1) {
+            inv.setItem(arrowSlot, new ItemStack("minecraft:arrow", arrowItem.amount - 1));
+        } else {
+            inv.setItem(arrowSlot, undefined);
+        }
     }
-
-    // calc
+    
+    // spawn arrow projectile
     const dir = player.getViewDirection();
     const head = player.getHeadLocation();
-
-    // 1.5 offset
-    const spawn = { 
-        x: head.x + dir.x * 1.5, 
-        y: head.y + dir.y * 1.5, 
-        z: head.z + dir.z * 1.5 
+    const spawnPos = {
+        x: head.x + dir.x * 1.5,
+        y: head.y + dir.y * 1.5,
+        z: head.z + dir.z * 1.5
     };
-
+    
     try {
-        const arrow = player.dimension.spawnEntity("minecraft:arrow", spawn);
+        const arrow = player.dimension.spawnEntity("minecraft:arrow", spawnPos);
         const proj = arrow.getComponent("projectile");
-        
         if (proj) {
             proj.owner = player;
             proj.shoot(dir, { uncertainty: 1.0, power: 3.0 });
         }
-
-        // play bow sound manually 
-        player.playSound("random.bow", { 
-            volume: 0.5, 
-            pitch: 1.1 + Math.random() * 0.4 
+        
+        player.playSound("random.bow", {
+            volume: 0.5,
+            pitch: 1.0 + Math.random() * 0.3
         });
-    } catch {}
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+// pc: click spam - fires on each use
+world.afterEvents.itemUse.subscribe((ev) => {
+    const player = ev.source;
+    const item = ev.itemStack;
+    
+    if (item?.typeId !== "bh:bow") return;
+    fireArrow(player);
+});
+
+// mobile: hold to spam - starts interval on hold
+world.afterEvents.itemStartUse.subscribe((ev) => {
+    const player = ev.source;
+    const item = ev.itemStack;
+    
+    if (item?.typeId !== "bh:bow") return;
+    
+    // clear existing interval if any
+    if (holdIntervals.has(player.id)) {
+        system.clearRun(holdIntervals.get(player.id));
+    }
+    
+    // start firing interval
+    const intervalId = system.runInterval(() => {
+        try {
+            if (!player.isValid()) {
+                system.clearRun(intervalId);
+                holdIntervals.delete(player.id);
+                return;
+            }
+            
+            // check if still holding bow
+            const currentItem = player.getComponent("inventory")?.container?.getItem(player.selectedSlotIndex);
+            if (currentItem?.typeId !== "bh:bow") {
+                system.clearRun(intervalId);
+                holdIntervals.delete(player.id);
+                return;
+            }
+            
+            fireArrow(player);
+        } catch (e) {
+            system.clearRun(intervalId);
+            holdIntervals.delete(player.id);
+        }
+    }, CONFIG.HOLD_FIRE_RATE);
+    
+    holdIntervals.set(player.id, intervalId);
+});
+
+// stop hold-to-fire when released
+world.afterEvents.itemStopUse.subscribe((ev) => {
+    const player = ev.source;
+    
+    if (holdIntervals.has(player.id)) {
+        system.clearRun(holdIntervals.get(player.id));
+        holdIntervals.delete(player.id);
+    }
+});
+
+world.afterEvents.itemReleaseUse.subscribe((ev) => {
+    const player = ev.source;
+    
+    if (holdIntervals.has(player.id)) {
+        system.clearRun(holdIntervals.get(player.id));
+        holdIntervals.delete(player.id);
+    }
+});
+
+// cleanup on leave
+world.afterEvents.playerLeave.subscribe((ev) => {
+    lastFireTime.delete(ev.playerId);
+    if (holdIntervals.has(ev.playerId)) {
+        system.clearRun(holdIntervals.get(ev.playerId));
+        holdIntervals.delete(ev.playerId);
+    }
 });

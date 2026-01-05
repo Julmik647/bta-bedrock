@@ -1,69 +1,42 @@
+// player loop for beta parity
 import { world, system, EquipmentSlot } from "@minecraft/server";
-console.warn("[keirazelle] Player Loop Loaded");
-const CONFIG = Object.freeze({
-    TICK_INTERVAL: 20,
-    HUNGER_LOCK: 5
-});
+console.warn("[keirazelle] player loop loaded");
 
-const playerWaterState = new Map();
-
-// generator fn to distribute player processing across ticks
-function* processPlayers() {
+// run every 2 ticks for instant response
+system.runInterval(() => {
     const players = world.getPlayers();
-    
-    for (const player of players) {
-        try {
-            const isCreative = player.getGameMode() === "creative";
 
-            // no orbs:p
+    for (const player of players) {
+        // safety check
+        if (!player.isValid()) continue;
+
+        try {
+            // xp removal
             if (player.level > 0 || player.xpEarnedAtCurrentLevel > 0) {
                 player.resetLevel();
             }
-            
-            if (!isCreative) {
-                const hunger = player.getComponent("minecraft:hunger");
-                if (hunger?.currentValue !== CONFIG.HUNGER_LOCK) {
-                    hunger?.setCurrentValue(CONFIG.HUNGER_LOCK);
+
+            // no offhand in beta
+            const equippable = player.getComponent("minecraft:equippable");
+            if (!equippable) continue;
+
+            const offhandItem = equippable.getEquipment(EquipmentSlot.Offhand);
+
+            if (offhandItem) {
+                // clear slot immediately
+                equippable.setEquipment(EquipmentSlot.Offhand, undefined);
+
+                const inv = player.getComponent("inventory")?.container;
+                if (inv) {
+                    const leftover = inv.addItem(offhandItem);
+                    if (leftover) {
+                        player.dimension.spawnItem(leftover, player.location);
+                    }
+                } else {
+                    // no inv? just drop
+                    player.dimension.spawnItem(offhandItem, player.location);
                 }
             }
-            
-            // no offhand
-            const equippable = player.getComponent("minecraft:equippable");
-            if (equippable?.getEquipment(EquipmentSlot.Offhand)) {
-                equippable.setEquipment(EquipmentSlot.Offhand, undefined);
-            }
-            
-            // water state
-            const pos = player.location;
-            const block = player.dimension.getBlock({
-                x: Math.floor(pos.x),
-                y: Math.floor(pos.y + 1.8),
-                z: Math.floor(pos.z)
-            });
-            
-            const inWater = block?.typeId?.includes("water") ?? false;
-            const wasInWater = playerWaterState.get(player.id) ?? false;
-            
-            if (inWater) {
-                playerWaterState.set(player.id, true);
-            } else if (wasInWater) {
-                player.onScreenDisplay.setActionBar("");
-                playerWaterState.set(player.id, false);
-            }
-        } catch (e) {
-            // log errors
-            console.warn(`[playerLoop] error processing ${player?.name}: ${e}`);
-        }
-        
-        yield;
+        } catch (e) {}
     }
-}
-
-system.runInterval(() => {
-    system.runJob(processPlayers());
-}, CONFIG.TICK_INTERVAL);
-
-// cleanup on leave
-world.afterEvents.playerLeave.subscribe((event) => {
-    playerWaterState.delete(event.playerId);
-});
+}, 2);

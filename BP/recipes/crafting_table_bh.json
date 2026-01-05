@@ -2,9 +2,10 @@
     "format_version": "1.20.10",
     "minecraft:recipe_shaped": {
         "description": {
-            "identifier": "bh:WorkBench_recipeId"
+            "identifier": "bh:crafting_table_recipe"
         },
         "tags": [
+            "crafting_table",
             "beta_crafting"
         ],
         "pattern": [

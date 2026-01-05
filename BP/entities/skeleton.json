@@ -419,8 +419,7 @@
         "priority": 0,
         "attack_interval_min": 2.0,
         "attack_interval_max": 4.0,
-        "attack_radius": 15.0,
-        "moves_with_target": false
+        "attack_radius": 15.0
       },
       "minecraft:behavior.hurt_by_target": {
         "priority": 1,
